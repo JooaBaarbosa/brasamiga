@@ -84,6 +84,37 @@ def test_orcamento_de_robo_e_descartado(client, settings):
     assert Database(settings.database_url).listar_orcamentos() == []
 
 
+def test_whatsapp_sem_aspas_no_toml_nao_derruba_o_site(client, settings):
+    toml = settings.content_dir / "site.toml"
+    toml.write_text(toml.read_text(encoding="utf-8").replace('"5511993433998"', "5511993433998"), encoding="utf-8")
+    resp = client.get("/")
+    assert resp.status_code == 200 and "https://wa.me/5511993433998" in resp.text
+
+
+def test_pacote_sem_nome_nao_quebra_o_orcamento(client, settings):
+    toml = settings.content_dir / "site.toml"
+    toml.write_text(toml.read_text(encoding="utf-8").replace('nome = "Senepol"\n', "", 1), encoding="utf-8")
+    resp = client.post("/orcamento", data={"nome": "Carla", "telefone": "1199"}, follow_redirects=False)
+    assert resp.status_code == 303
+
+
+def test_convidados_com_digito_estranho_nao_derruba(client, settings):
+    resp = client.post("/orcamento", data={"nome": "Carla", "telefone": "1199", "convidados": "²"},
+                       follow_redirects=False)
+    assert resp.status_code == 303
+    assert Database(settings.database_url).listar_orcamentos()[0]["convidados"] is None
+
+
+def test_agenda_usa_o_dia_do_fuso_configurado(client, settings, monkeypatch):
+    from app import relogio
+
+    Database(settings.database_url).criar_evento("Festa de hoje", date(2099, 12, 12), "", "", "futuro")
+    monkeypatch.setattr(relogio, "hoje", lambda: date(2099, 12, 13))
+    assert "Festa de hoje" not in client.get("/").text
+    monkeypatch.setattr(relogio, "hoje", lambda: date(2099, 12, 12))
+    assert "Festa de hoje" in client.get("/").text
+
+
 def test_site_toml_quebrado_mostra_linha(client, settings):
     (settings.content_dir / "site.toml").write_text('[marca]\nnome = "x\n', encoding="utf-8")
     resp = client.get("/")

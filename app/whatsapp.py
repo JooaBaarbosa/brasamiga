@@ -5,11 +5,12 @@ from urllib.parse import quote
 MENSAGEM_PADRAO = "Olá! Quero um orçamento de churrasco para o meu evento."
 
 
-def so_digitos(numero: str) -> str:
-    return re.sub(r"\D", "", numero)
+def so_digitos(numero: str | int) -> str:
+    # str(): no site.toml o número pode vir sem aspas, como inteiro.
+    return re.sub(r"\D", "", str(numero))
 
 
-def link(numero: str, mensagem: str | None = None) -> str:
+def link(numero: str | int, mensagem: str | None = None) -> str:
     url = f"https://wa.me/{so_digitos(numero)}"
     return f"{url}?text={quote(mensagem)}" if mensagem else url
 

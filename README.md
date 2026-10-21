@@ -16,6 +16,9 @@ docker compose up --build
 
 Banco, fotos enviadas pelo painel e versões otimizadas ficam no volume `brasamiga-data`.
 A pasta `conteudo/` é lida direto do seu computador: troque fotos ou edite o `site.toml` e recarregue a página.
+Vídeos novos em `conteudo/eventos-realizados/` aparecem depois de `docker compose restart` (são convertidos para MP4 na inicialização).
+
+Se o site avisar que o banco é "de uma versão antiga", apague a pasta `data/` (ela é da primeira versão do site e não tem pedidos novos).
 
 ## Rodando sem Docker
 

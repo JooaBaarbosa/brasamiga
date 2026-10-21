@@ -3,7 +3,7 @@ from datetime import date
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-from app import whatsapp
+from app import relogio, whatsapp
 from app.web import templates
 
 router = APIRouter()
@@ -22,7 +22,7 @@ def _contexto(request: Request, form: dict | None = None, erro: str | None = Non
     estado = request.app.state
     site = estado.conteudo.site()
     realizados = estado.db.listar_eventos("realizado")
-    futuros = estado.db.listar_eventos("futuro", a_partir_de=date.today())
+    futuros = estado.db.listar_eventos("futuro", a_partir_de=relogio.hoje())
     agrupadas = estado.db.midias_por_evento([e["id"] for e in realizados + futuros])
     for evento in realizados + futuros:
         evento["midias"] = [
@@ -89,8 +89,8 @@ def pedir_orcamento(
         return templates.TemplateResponse(request, "index.html", contexto, status_code=400)
 
     site = request.app.state.conteudo.site()
-    nomes_pacotes = {p["nome"] for p in site.get("pacotes", [])}
-    convidados_ok = form["convidados"].isdigit() and int(form["convidados"]) > 0
+    nomes_pacotes = {p.get("nome") for p in site.get("pacotes", [])} - {None, ""}
+    convidados_ok = form["convidados"].isdecimal() and int(form["convidados"]) > 0
     dados = {
         "nome": form["nome"],
         "telefone": form["telefone"],

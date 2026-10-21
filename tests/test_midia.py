@@ -87,6 +87,24 @@ def test_processar_imagem_corrompida(tmp_path):
         midia.processar(falsa, "falsa.jpg")
 
 
+def test_conversao_grava_em_temporario_e_renomeia(tmp_path, monkeypatch):
+    destino = tmp_path / "saida.mp4"
+    saidas = []
+
+    def ffmpeg_falso(comando, **_):
+        saidas.append(comando[-1])
+        with open(comando[-1], "wb") as arquivo:
+            arquivo.write(b"mp4")
+        return subprocess.CompletedProcess(comando, 0)
+
+    monkeypatch.setattr(midia, "ffmpeg_disponivel", lambda: True)
+    monkeypatch.setattr(midia.subprocess, "run", ffmpeg_falso)
+    assert midia.converter_video(tmp_path / "entrada.mov", destino)
+    assert saidas[0] != str(destino)  # o ffmpeg nunca escreve direto no arquivo final
+    assert destino.read_bytes() == b"mp4"
+    assert [p.name for p in tmp_path.iterdir()] == ["saida.mp4"]
+
+
 @pytest.mark.skipif(midia.ffmpeg_disponivel(), reason="só vale sem ffmpeg instalado")
 def test_video_sem_ffmpeg_fica_original_com_aviso(tmp_path):
     video = tmp_path / "clip.mov"

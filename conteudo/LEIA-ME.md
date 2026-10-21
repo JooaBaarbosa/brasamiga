@@ -1,6 +1,6 @@
 # Pasta de conteúdo do Brasamiga
 
-Tudo aqui aparece no site ao recarregar a página.
+Textos, logo, PDF e fotos aparecem no site ao recarregar a página. Vídeos novos precisam ser convertidos e aparecem depois de reiniciar o site (`docker compose restart`).
 
 | Pasta / arquivo | O que colocar | Onde aparece |
 |---|---|---|

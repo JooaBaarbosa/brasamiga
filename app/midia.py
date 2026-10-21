@@ -109,20 +109,24 @@ def converter_video(origem: Path, destino: Path) -> bool:
     """MP4 H.264 até 1080p, sem metadados. Devolve False se o ffmpeg faltar ou falhar."""
     if not ffmpeg_disponivel():
         return False
+    # Escreve num temporário e renomeia: um MP4 pela metade nunca fica com o nome final.
+    parcial = destino.with_name(f"{destino.stem}.parcial{destino.suffix}")
     comando = [
         "ffmpeg", "-y", "-loglevel", "error", "-i", str(origem),
         "-map_metadata", "-1",
         "-vf", "scale='min(1920,iw)':'min(1080,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2",
         "-c:v", "libx264", "-preset", "veryfast", "-crf", "26", "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart",
-        str(destino),
+        str(parcial),
     ]
     try:
         ok = subprocess.run(comando, capture_output=True, timeout=900).returncode == 0
     except subprocess.TimeoutExpired:
         ok = False
-    if not ok:
-        destino.unlink(missing_ok=True)
+    if ok:
+        parcial.replace(destino)
+    else:
+        parcial.unlink(missing_ok=True)
     return ok
 
 

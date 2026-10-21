@@ -70,3 +70,29 @@ def test_orcamentos_novos_primeiro_e_alternar_lido(db):
     assert [o["nome"] for o in db.listar_orcamentos()] == ["Bia", "Ana"]
     assert db.listar_orcamentos()[1]["convidados"] == 80
     assert primeiro != segundo
+
+
+def test_banco_da_versao_antiga_da_erro_claro(tmp_path):
+    import sqlite3
+
+    caminho = tmp_path / "velho.db"
+    conexao = sqlite3.connect(caminho)
+    conexao.execute("CREATE TABLE orcamentos (id INTEGER PRIMARY KEY, nome TEXT, tipo_evento TEXT)")
+    conexao.commit()
+    conexao.close()
+    with pytest.raises(RuntimeError, match="versão antiga"):
+        Database(f"sqlite:///{caminho.as_posix()}")
+
+
+def test_criado_em_usa_o_fuso_configurado(db, monkeypatch):
+    from datetime import datetime, timedelta
+    from zoneinfo import ZoneInfo
+
+    from app import relogio
+
+    longe = ZoneInfo("Pacific/Kiritimati")  # UTC+14, diferente de qualquer fuso local
+    monkeypatch.setattr(relogio, "FUSO", longe)
+    db.criar_orcamento("Ana", "1199")
+    criado = db.listar_orcamentos()[0]["criado_em"]
+    esperado = datetime.now(longe).replace(tzinfo=None)
+    assert abs(criado - esperado) < timedelta(minutes=2)

@@ -26,5 +26,9 @@ def test_mensagem_completa():
     )
 
 
+def test_link_aceita_numero_sem_aspas_no_toml():
+    assert whatsapp.link(5511993433998) == "https://wa.me/5511993433998"
+
+
 def test_mensagem_so_com_nome():
     assert whatsapp.mensagem_orcamento("Carla") == "Olá! Sou Carla e quero um orçamento do Brasamiga."

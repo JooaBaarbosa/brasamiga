@@ -1,6 +1,6 @@
 """Banco de dados. SQLite hoje; Postgres (Neon) na Vercel trocando só a DATABASE_URL."""
 
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 
 from sqlalchemy import (
@@ -20,11 +20,14 @@ from sqlalchemy import (
     event,
     func,
     insert,
+    inspect,
     not_,
     or_,
     select,
     update,
 )
+
+from app import relogio
 
 metadata = MetaData()
 
@@ -37,7 +40,7 @@ eventos = Table(
     Column("local", String(200), nullable=False, default=""),
     Column("descricao", Text, nullable=False, default=""),
     Column("tipo", String(10), nullable=False),
-    Column("criado_em", DateTime, nullable=False, default=datetime.now),
+    Column("criado_em", DateTime, nullable=False, default=relogio.agora),
     CheckConstraint("tipo IN ('realizado', 'futuro')", name="ck_eventos_tipo"),
 )
 
@@ -49,7 +52,7 @@ midias = Table(
     Column("chave", String(200), nullable=False),
     Column("chave_miniatura", String(200)),
     Column("tipo", String(10), nullable=False),
-    Column("criado_em", DateTime, nullable=False, default=datetime.now),
+    Column("criado_em", DateTime, nullable=False, default=relogio.agora),
     CheckConstraint("tipo IN ('imagem', 'video')", name="ck_midias_tipo"),
 )
 
@@ -66,7 +69,7 @@ orcamentos = Table(
     Column("pacote", String(50), nullable=False, default=""),
     Column("mensagem", Text, nullable=False, default=""),
     Column("lido", Boolean, nullable=False, default=False),
-    Column("criado_em", DateTime, nullable=False, default=datetime.now),
+    Column("criado_em", DateTime, nullable=False, default=relogio.agora),
 )
 
 
@@ -78,6 +81,24 @@ class Database:
         if self.engine.dialect.name == "sqlite":
             event.listen(self.engine, "connect", lambda conn, _: conn.execute("PRAGMA foreign_keys = ON"))
         metadata.create_all(self.engine)
+        self._conferir_schema()
+
+    def _conferir_schema(self) -> None:
+        """create_all não altera tabelas existentes: um banco da v1 quebraria o site em silêncio."""
+        inspetor = inspect(self.engine)
+        faltando = [
+            f"{tabela.name}.{coluna.name}"
+            for tabela in metadata.sorted_tables
+            for coluna in tabela.columns
+            if coluna.name not in {c["name"] for c in inspetor.get_columns(tabela.name)}
+        ]
+        if faltando:
+            onde = self.engine.url.render_as_string(hide_password=True)
+            raise RuntimeError(
+                f"O banco {onde} é de uma versão antiga do site (faltam as colunas {', '.join(faltando)}). "
+                "Apague esse arquivo (ou a pasta data/) para o site criar um banco novo, "
+                "ou aponte DATABASE_URL para outro banco."
+            )
 
     def _linhas(self, stmt) -> list[dict]:
         with self.engine.connect() as conn:
