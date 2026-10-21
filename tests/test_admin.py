@@ -91,6 +91,27 @@ def test_convidados_invalidos(client, settings):
         assert resp.status_code == 400 and "Informe entre 1 e 5000 convidados." in resp.text, valor
 
 
+def test_convidados_lixo_nunca_da_500(client, settings):
+    for valor in ("--5", "9" * 5000, "1e3", "12 pessoas"):
+        resp = _criar(client, convidados=valor)
+        assert resp.status_code == 303, valor
+        assert Database(settings.database_url).obter_evento(_id(resp))["convidados"] is None
+
+
+def test_data_fora_do_intervalo_e_recusada_sem_500(client):
+    for data in ("9999-12-31", "0001-01-01"):
+        resp = _criar_futuro(client, data, "12:00", "17:00")
+        assert resp.status_code == 400 and "Informe uma data entre 1900 e 2999." in resp.text, data
+        assert f'value="{data}"' in resp.text
+
+
+def test_caixa_tem_protecao_contra_clique_duplo(client, settings):
+    (settings.content_dir / "eventos-realizados" / "solta.jpg").write_bytes(jpeg_bytes())
+    html = client.get("/admin", auth=AUTH).text
+    assert 'action="/admin/caixa/adicionar" class="form" data-envio-unico' in html
+    assert "form[data-envio-unico]" in html
+
+
 def test_alt_manual_da_midia(client, settings):
     evento = _id(_criar(client))
     midia = Database(settings.database_url).listar_midias(evento)[0]

@@ -35,7 +35,7 @@
     <div class="aviso erro" role="alert"><ul>{% for e in erros_caixa %}<li>{{ e }}</li>{% endfor %}</ul></div>
   {% endif %}
   {% if caixa %}
-  <form method="post" action="/admin/caixa/adicionar" class="form">
+  <form method="post" action="/admin/caixa/adicionar" class="form" data-envio-unico>
     <p class="form-linha">
       <button type="button" class="secundario" data-marcar="todas">Selecionar todas</button>
       <button type="button" class="secundario" data-marcar="nenhuma">Selecionar nenhuma</button>

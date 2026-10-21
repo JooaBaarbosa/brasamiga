@@ -17,7 +17,7 @@
   </main>
   <script>
     // Avisa que o envio pode demorar (vídeos são convertidos no servidor).
-    document.querySelectorAll("form[enctype='multipart/form-data']").forEach((form) => {
+    document.querySelectorAll("form[enctype='multipart/form-data'], form[data-envio-unico]").forEach((form) => {
       form.addEventListener("submit", () => {
         const botao = form.querySelector("button[type=submit]");
         if (botao) { botao.disabled = true; botao.textContent = "Enviando e convertendo…"; }

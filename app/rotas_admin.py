@@ -1,3 +1,4 @@
+import re
 import shutil
 import tempfile
 from datetime import date, time, timedelta
@@ -90,9 +91,12 @@ def _campos_evento(form: dict[str, str], site: dict) -> dict:
     if tipo not in TIPOS:
         erros.append("Escolha se o evento já foi realizado ou ainda vai acontecer.")
     quando = _data(form.get("data", "").strip())
+    if quando and not 1900 <= quando.year <= 2999:
+        erros.append("Informe uma data entre 1900 e 2999.")
+        quando = None
     inicio, fim = _hora(form.get("hora_inicio", "").strip()), _hora(form.get("hora_fim", "").strip())
     if tipo == "futuro":
-        if not quando:
+        if not quando and "Informe uma data entre 1900 e 2999." not in erros:
             erros.append("Informe a data do evento.")
         if not inicio or not fim:
             erros.append("Informe o início e o fim do evento.")
@@ -103,7 +107,7 @@ def _campos_evento(form: dict[str, str], site: dict) -> dict:
         erros.append("Escreva o título para o site (o que o cliente vê).")
     convidados_texto = form.get("convidados", "").strip()
     convidados = None
-    if convidados_texto.lstrip("-").isdecimal():
+    if re.fullmatch(r"-?[0-9]{1,7}", convidados_texto):  # qualquer outra coisa é lixo e vira vazio
         convidados = int(convidados_texto)
         if not 1 <= convidados <= 5000:
             erros.append("Informe entre 1 e 5000 convidados.")
