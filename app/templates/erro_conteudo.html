@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Erro no conteúdo · Brasamiga</title>
+  <style>
+    body { margin: 0; padding: 2rem 1rem; background: #F3EBDF; color: #1E1A17; font: 1.05rem/1.6 system-ui, sans-serif; }
+    main { max-width: 40rem; margin: 0 auto; border-left: 4px solid #A93226; padding-left: 1.25rem; }
+    code { background: #EADFCE; padding: 0.1rem 0.35rem; border-radius: 0.25rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>O site não carregou por causa do arquivo {{ erro.arquivo.name }}</h1>
+    <p><strong>{% if erro.linha %}Na linha {{ erro.linha }}: {% endif %}{{ erro.detalhe }}.</strong></p>
+    <p>Abra <code>{{ erro.arquivo }}</code>, corrija {% if erro.linha %}a linha {{ erro.linha }}{% else %}o arquivo{% endif %} e recarregue esta página. Os erros mais comuns são aspas sem fechar e colchetes faltando.</p>
+  </main>
+</body>
+</html>

@@ -1,0 +1,91 @@
+from datetime import date
+from urllib.parse import parse_qs, urlparse
+
+from app.db import Database
+from tests.fabrica import jpeg_bytes
+
+
+def test_home_mostra_marca_pacotes_e_faq(client):
+    resp = client.get("/")
+    assert resp.status_code == 200
+    html = resp.text
+    for texto in ("Churrasco para eventos", "Senepol", "Devon", "Nelore", "Angus",
+                  "R$ 120", "Mais pedido", "Qual região vocês atendem?", "Pagamento e reserva"):
+        assert texto in html, texto
+    assert "https://wa.me/5511993433998" in html
+    assert "/cache/logo/" in html
+
+
+def test_healthz(client):
+    assert client.get("/healthz").json() == {"ok": True}
+
+
+def test_galeria_da_pasta_so_publica_versao_web(client, settings):
+    (settings.content_dir / "eventos-realizados" / "IMG_0385.JPEG").write_bytes(jpeg_bytes(gps=True))
+    html = client.get("/").text
+    assert "/cache/galeria/" in html and "-mini.webp" in html
+    arquivo = html.split('src="/cache/galeria/')[1].split('"')[0]
+    assert client.get(f"/cache/galeria/{arquivo}").headers["content-type"] == "image/webp"
+    assert client.get("/conteudo/eventos-realizados/IMG_0385.JPEG").status_code == 404
+    assert client.get("/conteudo/site.toml").status_code == 404
+
+
+def test_agenda_so_aparece_com_evento_futuro(client, settings):
+    assert "Próximos eventos" not in client.get("/").text
+    db = Database(settings.database_url)
+    db.criar_evento("Formatura de Medicina", date(2099, 12, 12), "Campinas", "", "futuro")
+    db.criar_evento("Já passou", date(2001, 1, 1), "", "", "futuro")
+    html = client.get("/").text
+    assert "Próximos eventos" in html and "Formatura de Medicina" in html
+    assert "Já passou" not in html
+
+
+def test_orcamento_salva_e_abre_whatsapp(client, settings):
+    resp = client.post(
+        "/orcamento",
+        data={"nome": "Carla", "telefone": "11988887777", "data_evento": "2026-12-12",
+              "local": "Moema", "convidados": "80", "pacote": "Nelore", "mensagem": ""},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 303
+    destino = urlparse(resp.headers["location"])
+    assert destino.netloc == "wa.me" and destino.path == "/5511993433998"
+    texto = parse_qs(destino.query)["text"][0]
+    assert "Sou Carla" in texto and "Pacote: Nelore." in texto and "Data: 12/12/2026." in texto
+    salvo = Database(settings.database_url).listar_orcamentos()[0]
+    assert (salvo["nome"], salvo["convidados"], salvo["pacote"]) == ("Carla", 80, "Nelore")
+
+
+def test_orcamento_com_campos_estranhos_e_aceito(client, settings):
+    resp = client.post(
+        "/orcamento",
+        data={"nome": "Carla", "telefone": "11988887777", "data_evento": "31/02",
+              "convidados": "80 pessoas", "pacote": "Wagyu Supremo"},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 303
+    salvo = Database(settings.database_url).listar_orcamentos()[0]
+    assert (salvo["data_evento"], salvo["convidados"], salvo["pacote"]) == (None, None, "")
+
+
+def test_orcamento_sem_telefone_volta_preenchido(client, settings):
+    resp = client.post("/orcamento", data={"nome": "Carla", "local": "Moema"})
+    assert resp.status_code == 400
+    assert "Preencha seu nome e um WhatsApp" in resp.text
+    assert 'value="Carla"' in resp.text and 'value="Moema"' in resp.text
+    assert Database(settings.database_url).listar_orcamentos() == []
+
+
+def test_orcamento_de_robo_e_descartado(client, settings):
+    resp = client.post(
+        "/orcamento", data={"nome": "Bot", "telefone": "1", "website": "http://spam"}, follow_redirects=False
+    )
+    assert resp.status_code == 303
+    assert Database(settings.database_url).listar_orcamentos() == []
+
+
+def test_site_toml_quebrado_mostra_linha(client, settings):
+    (settings.content_dir / "site.toml").write_text('[marca]\nnome = "x\n', encoding="utf-8")
+    resp = client.get("/")
+    assert resp.status_code == 500
+    assert "site.toml" in resp.text and "linha 2" in resp.text
