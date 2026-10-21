@@ -3,7 +3,7 @@ from datetime import date
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-from app import relogio, whatsapp
+from app import agenda, relogio, whatsapp
 from app.web import templates
 
 router = APIRouter()
@@ -53,6 +53,17 @@ def _contexto(request: Request, form: dict | None = None, erro: str | None = Non
 @router.get("/", response_class=HTMLResponse)
 def home(request: Request, enviado: bool = False):
     return templates.TemplateResponse(request, "index.html", _contexto(request, enviado=enviado))
+
+
+@router.get("/api/agenda")
+def api_agenda(request: Request, mes: str | None = None):
+    """Horários ocupados do mês. Nunca inclui nome, local ou descrição dos eventos."""
+    hoje = relogio.hoje()
+    inicio_mes = agenda.mes_ou_atual(mes, hoje)
+    fim_mes = agenda.fim_do_mes(inicio_mes)
+    inicio = max(inicio_mes, hoje)
+    linhas = request.app.state.db.horarios_entre(inicio, fim_mes) if inicio <= fim_mes else []
+    return agenda.resposta(inicio_mes, hoje, agenda.mapa_dias(linhas))
 
 
 @router.get("/healthz")

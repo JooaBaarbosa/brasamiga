@@ -10,7 +10,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
-from app import midia
+from app import agenda, midia, relogio
 from app.web import templates
 
 TIPOS = {"realizado", "futuro"}
@@ -112,6 +112,14 @@ def _pagina_evento(request: Request, evento_id: int, erros=None, avisos=None, sa
         {"evento": evento, "midias": midias, "erros": erros or [], "avisos": avisos or [], "salvo": salvo},
         status_code=400 if erros else 200,
     )
+
+
+@router.get("/api/agenda")
+def api_agenda_admin(request: Request, mes: str | None = None):
+    hoje = relogio.hoje()
+    inicio = agenda.mes_ou_atual(mes, hoje)
+    linhas = request.app.state.db.eventos_entre(inicio, agenda.fim_do_mes(inicio))
+    return agenda.resposta(inicio, hoje, agenda.mapa_dias(linhas, ("id", "titulo", "local", "tipo")))
 
 
 @router.get("", response_class=HTMLResponse)

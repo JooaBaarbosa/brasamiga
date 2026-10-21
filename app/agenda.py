@@ -4,6 +4,7 @@ Cada evento bloqueia do início menos a montagem até o fim mais a folga de desl
 Blocos que só encostam não conflitam.
 """
 
+import calendar
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 
@@ -52,6 +53,50 @@ def conflitos(novo: dict, existentes: list[dict], montagem: timedelta, folga: ti
         and (novo.get("id") is None or e.get("id") != novo.get("id"))
         and conflitam(bloco, _bloqueio_do(e, montagem, folga))
     ]
+
+
+# Calendário (usado pelas APIs /api/agenda e /admin/api/agenda)
+
+def mes_ou_atual(texto: str | None, hoje: date) -> date:
+    """Primeiro dia do mês 'AAAA-MM'; qualquer coisa inválida vira o mês de hoje."""
+    try:
+        ano, mes = texto.split("-") if texto else ("", "")
+        if len(ano) == 4 and len(mes) == 2:
+            return date(int(ano), int(mes), 1)
+    except ValueError:
+        pass
+    return hoje.replace(day=1)
+
+
+def fim_do_mes(mes: date) -> date:
+    return date(mes.year, mes.month, calendar.monthrange(mes.year, mes.month)[1])
+
+
+def vizinhos(mes: date) -> tuple[str | None, str | None]:
+    anterior = (mes - timedelta(days=1)).replace(day=1) if mes > date.min else None
+    proximo = fim_do_mes(mes) + timedelta(days=1) if fim_do_mes(mes) < date.max else None
+    formato = lambda d: f"{d.year:04d}-{d.month:02d}" if d else None  # noqa: E731
+    return formato(anterior), formato(proximo)
+
+
+def _hhmm(valor: time | None) -> str | None:
+    return valor.strftime("%H:%M") if valor else None
+
+
+def mapa_dias(linhas: list[dict], campos_extras: tuple[str, ...] = ()) -> dict[str, list[dict]]:
+    dias: dict[str, list[dict]] = {}
+    ordenadas = sorted(linhas, key=lambda l: (l["data"], l["hora_inicio"] is not None, l["hora_inicio"] or time()))
+    for linha in ordenadas:
+        item = {"inicio": _hhmm(linha["hora_inicio"]), "fim": _hhmm(linha["hora_fim"])}
+        item.update({campo: linha[campo] for campo in campos_extras})
+        dias.setdefault(linha["data"].isoformat(), []).append(item)
+    return dias
+
+
+def resposta(mes: date, hoje: date, dias: dict) -> dict:
+    anterior, proximo = vizinhos(mes)
+    return {"mes": f"{mes.year:04d}-{mes.month:02d}", "anterior": anterior, "proximo": proximo,
+            "hoje": hoje.isoformat(), "dias": dias}
 
 
 def _horas(valor) -> timedelta:

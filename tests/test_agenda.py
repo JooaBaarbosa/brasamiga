@@ -52,6 +52,32 @@ def test_evento_sem_horas_bloqueia_o_dia():
     assert agenda.conflitos(_ev(None, date(2026, 11, 1), time(8), time(10)), [existente], H, H) == []
 
 
+def test_mes_ou_atual():
+    hoje = date(2026, 10, 21)
+    assert agenda.mes_ou_atual("2026-11", hoje) == date(2026, 11, 1)
+    for invalido in ("abc", "2026-13", "", None, "2026-1"):
+        assert agenda.mes_ou_atual(invalido, hoje) == date(2026, 10, 1), invalido
+
+
+def test_vizinhos_nas_bordas():
+    assert agenda.vizinhos(date(2026, 1, 1)) == ("2025-12", "2026-02")
+    assert agenda.vizinhos(date(9999, 12, 1)) == ("9999-11", None)
+    assert agenda.vizinhos(date(1, 1, 1)) == (None, "0001-02")
+
+
+def test_mapa_dias():
+    linhas = [
+        {"data": date(2026, 10, 31), "hora_inicio": time(19), "hora_fim": time(23), "id": 2},
+        {"data": date(2026, 10, 31), "hora_inicio": time(12), "hora_fim": time(17), "id": 1},
+        {"data": date(2026, 11, 7), "hora_inicio": None, "hora_fim": None, "id": 3},
+    ]
+    assert agenda.mapa_dias(linhas) == {
+        "2026-10-31": [{"inicio": "12:00", "fim": "17:00"}, {"inicio": "19:00", "fim": "23:00"}],
+        "2026-11-07": [{"inicio": None, "fim": None}],
+    }
+    assert agenda.mapa_dias(linhas[:1], ("id",)) == {"2026-10-31": [{"inicio": "19:00", "fim": "23:00", "id": 2}]}
+
+
 def test_parametros_do_site_toml():
     assert agenda.parametros({}) == (H, H)
     assert agenda.parametros({"agenda": {"montagem_horas": 2, "folga_horas": 0.5}}) == (2 * H, H / 2)
