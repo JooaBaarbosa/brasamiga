@@ -1,17 +1,17 @@
 # Pasta de conteúdo do Brasamiga
 
-Tudo o que você colocar aqui aparece na landing page ao recarregar o site, sem precisar mexer no código.
+Tudo aqui aparece no site ao recarregar a página.
 
 | Pasta / arquivo | O que colocar | Onde aparece |
 |---|---|---|
-| `logo/` | Um arquivo de logo (PNG, SVG, WEBP ou JPG). Se houver mais de um, vale o primeiro em ordem alfabética. | Topo do site e ícone da aba |
-| `cardapio/` | O cardápio em **PDF** (vira botão "Baixar") e/ou **fotos** do cardápio. | Seção Cardápio |
-| `eventos-realizados/` | Fotos (JPG, PNG, WEBP, GIF, AVIF) e vídeos (MP4, WEBM, MOV) de festas que vocês já fizeram. | Galeria "Eventos que a gente já serviu" |
-| `site.toml` | Slogan, cidade, WhatsApp, e-mail, Instagram, lista de serviços e o cardápio em texto. | Página inteira |
+| `site.toml` | Pacotes e preços, quem somos, diferenciais, condições, FAQ, WhatsApp e Instagram | Página inteira |
+| `logo/` | Arquivos do logo. O `site.toml` indica qual usar nas faixas escuras (`logo_escuro`, hoje `LOGO-03.png`, branco sobre preto) | Topo, abertura e ícone da aba |
+| `cardapio/` | O PDF da proposta comercial | Botão "Baixar a proposta completa" |
+| `eventos-realizados/` | Fotos (JPG, PNG, WEBP, HEIC) e vídeos (MP4, MOV) de festas já feitas | Galeria "Eventos realizados" |
 
 ## Dicas
 
-- Fotos com até ~2 MB carregam rápido no celular. Fotos de câmera costumam ter 8–15 MB: reduza antes de colocar aqui.
-- Os nomes dos arquivos definem a ordem (`01-casamento.jpg`, `02-aniversario.jpg`...).
-- Para separar as fotos **por evento**, com nome, data e local, use o painel em `/admin` em vez desta pasta.
-- Para trocar o cardápio, edite os blocos `[[cardapio]]` do `site.toml` ou coloque um PDF novo em `cardapio/`.
+- O site cria sozinho versões leves das fotos e tira a localização (GPS) que o celular grava nelas. Os arquivos originais nunca ficam públicos.
+- A ordem da galeria segue o nome dos arquivos (`01-casamento.jpg`, `02-aniversario.jpg`...).
+- Para fotos separadas por evento, com nome, data e local, use o painel `/admin`.
+- Ao editar o `site.toml`, mantenha as aspas e os colchetes. Se algo quebrar, o site mostra a linha do erro.

@@ -1,0 +1,11 @@
+.venv/
+.git/
+.claude/
+.superpowers/
+data/
+docs/
+tests/
+**/__pycache__/
+.pytest_cache/
+.env
+conteudo/logo/*.ai
