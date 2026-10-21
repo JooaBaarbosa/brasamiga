@@ -1,4 +1,8 @@
-# Agenda com calendário e horários (design)
+# Agenda com calendário + galeria de eventos realizados (design)
+
+Este documento tem duas partes, implementadas num único plano porque mexem na mesma tabela `eventos` e na mesma migração:
+- **Parte 1, seções 1 a 8:** agenda com calendário e horários.
+- **Parte 2, seção 9:** galeria de eventos realizados com carrosséis, busca e filtros.
 
 Data: 2026-10-21 · Status: aguardando revisão do dono
 Base: landing minimalista (direção C) em `main` @ 705ee15
@@ -114,7 +118,7 @@ Protegida pela mesma autenticação do painel. Usa a mesma estrutura, e cada ite
   - Num dia sem evento, o painel diz "Dia livre" e mostra o mesmo botão.
 - Sem JavaScript, um `<noscript>` diz para ativar o JavaScript ou chamar no WhatsApp.
 - Acessibilidade: os dias são `<button>` com `aria-label` (ex.: "31 de outubro, 2 horários ocupados") e o painel tem `aria-live="polite"`.
-- **Galeria de realizados:** os eventos do admin deixam de exibir título, local e descrição. Cada um mostra só "Maio 2026", o mês e o ano da data, e as fotos.
+- **Galeria de realizados:** é redesenhada conforme a seção 9. Ela nunca exibe `titulo`, `local` ou `descricao`; mostra só o **título público**.
 
 ### 6.2 Admin
 
@@ -158,8 +162,7 @@ Protegida pela mesma autenticação do painel. Usa a mesma estrutura, e cada ite
   - editar sem mudar o horário não acusa conflito consigo mesmo.
 - **Site:**
   - a seção Agenda tem `data-api="/api/agenda"`;
-  - a página HTML não contém título nem local de evento futuro ou realizado;
-  - a galeria mostra o mês e o ano.
+  - a página HTML não contém título nem local de evento futuro ou realizado (testes da galeria na seção 9.7).
 - **Visual:** screenshots do calendário no computador e no celular, com dados de exemplo (2 eventos no mesmo sábado).
 
 ## 8. Fora do escopo
@@ -168,3 +171,133 @@ Protegida pela mesma autenticação do painel. Usa a mesma estrutura, e cada ite
 - Sugestão automática de horário livre.
 - Eventos recorrentes, bloqueio manual de dias (férias) e sincronização com Google Calendar.
 - Limite de eventos por dia além da regra de conflito.
+- Busca no servidor e paginação da galeria (a filtragem é no navegador; ver 9.4).
+
+---
+
+# Parte 2: galeria de eventos realizados
+
+## 9.1 Objetivo e decisões
+
+O cliente navega pelos eventos já realizados como **cards com carrossel**: 1 evento tem N fotos e vídeos. Uma **barra de busca** e **filtros** ajudam a achar eventos parecidos com o dele. **Nenhuma foto fica solta no site**: toda foto pública pertence a um evento.
+
+| Tema | Decisão do dono |
+|---|---|
+| Layout | **A**: grade de cards com carrossel; 3 por linha no computador, 2 no tablet e 1 no celular |
+| Busca | Procura num **título público** que o dono escreve por evento (o nome real e o local continuam só no admin) |
+| Fotos soltas da pasta | Viram uma **caixa de entrada** no admin, onde são atribuídas a um evento ou ignoradas |
+| Filtros | Tipo: **Aniversário, Casamento, Corporativo, Outros**. Convidados: **15–39, 40–59, 60+** (faixas do PDF) |
+| Card | Tipo · convidados, título público, mês/ano · **pacote servido** |
+
+## 9.2 Dados
+
+**Colunas novas em `eventos`** (todas anuláveis; a migração automática da seção 3.2 as acrescenta):
+
+| Coluna | Tipo | Regra |
+|---|---|---|
+| `titulo_publico` | `VARCHAR(120)` | **Obrigatório** para `realizado`. É o único texto do evento exibido e pesquisável no site. |
+| `categoria` | `VARCHAR(30)` | Um dos `[galeria] categorias` do `site.toml`. Padrão: "Outros". |
+| `convidados` | `INTEGER` | Opcional, entre 1 e 5000. Sem valor, o evento só aparece em "Qualquer tamanho". |
+| `pacote` | `VARCHAR(50)` | Opcional; um dos nomes de `[[pacotes]]`. Se preenchido, aparece no card ("Pacote Angus"). |
+
+**Coluna nova em `midias`:** `alt VARCHAR(200)`, opcional. É a descrição da foto escrita pelo dono e tem prioridade sobre o alt automático (seção 9.6).
+
+**Tabela nova `caixa_entrada`:**
+- Colunas: `id`, `arquivo` (nome em `conteudo/eventos-realizados/`), `assinatura` (nome:tamanho:mtime), `situacao` (`'importado'` ou `'ignorado'`), `evento_id` (anulável) e `criado_em`.
+- Ela registra o que já foi tratado. Assim, a pasta, que no Docker é montada só para leitura, nunca precisa ser alterada.
+
+**`site.toml`:**
+
+```toml
+[galeria]
+titulo = "Eventos realizados"
+categorias = ["Aniversário", "Casamento", "Corporativo", "Outros"]
+faixas = [                       # convidados
+  { rotulo = "15–39", min = 15, max = 39 },
+  { rotulo = "40–59", min = 40, max = 59 },
+  { rotulo = "60+",   min = 60 },
+]
+```
+
+## 9.3 Caixa de entrada no admin
+
+- **Bloco "Fotos sem evento (N)"** no `/admin`, mostrado só se houver alguma. Ele lista, como miniaturas (as versões web em cache, sem GPS), os arquivos da pasta que não estão em `caixa_entrada`. Um arquivo que mudar de tamanho ou de data volta a aparecer.
+- **Seleção:** cada foto tem um checkbox, e há os atalhos "selecionar todas" e "selecionar nenhuma".
+- **Ações:**
+  - **"Adicionar ao evento"**, com um seletor dos eventos realizados mais a opção "+ Novo evento realizado…", que leva ao formulário. Cada arquivo passa por `midia.processar` (WEBP sem GPS, MP4) e é gravado no armazenamento como um upload. Depois, o arquivo é marcado como `importado`.
+  - **"Ignorar"** marca o arquivo como `ignorado` (por exemplo, uma foto repetida).
+- **Erros:** os arquivos que falharem (imagem inválida, vídeo sem ffmpeg) ficam na caixa, com uma mensagem por arquivo. Os outros seguem.
+- **Foto de capa:** a `foto_capa` continua vindo da pasta (é a abertura do site, não uma foto da galeria) e não entra na caixa de entrada.
+- **Galeria pública:** `Conteudo.galeria()` deixa de ser usada nela. Ela passa a se basear só em eventos realizados com pelo menos 1 mídia.
+
+## 9.4 Galeria pública
+
+- **Estrutura:** a seção "Eventos realizados" tem a barra de busca, depois as linhas de chips de filtro (tipo | tamanho), o contador "N eventos" e a grade de cards.
+- **Renderização:** os cards são gerados no servidor com `data-categoria`, `data-convidados` e `data-busca`. O `data-busca` é o texto normalizado (minúsculas, sem acento) do título público, da categoria e do pacote.
+- **Filtragem:** o script `app/static/js/galeria.js` filtra na hora, enquanto o cliente digita (com debounce de 150 ms) ou clica nos chips. A filtragem é no navegador porque a galeria de um buffet tem dezenas de eventos, não milhares.
+- **Link compartilhável:** a URL guarda o filtro (`?tipo=casamento&pessoas=60&q=interior`), sem recarregar a página (`history.replaceState`). Abrir esse link já aplica os filtros.
+- **Sem resultado:** aparece "Nenhum evento com esses filtros." com o botão **Limpar filtros**.
+- **Sem JavaScript:** todos os cards aparecem e os chips ficam escondidos.
+- **Ordem:** os eventos mais recentes aparecem primeiro.
+
+## 9.5 Carrossel
+
+- **Componente:** `app/static/js/carrossel.js`, sem dependências.
+  - A trilha usa `scroll-snap`, então o arraste no celular é nativo.
+  - Tem botões ‹ ›, contador "1/5" e bolinhas clicáveis. As bolinhas são trocadas por apenas "1/5" quando houver mais de 8 fotos.
+  - Aceita setas do teclado quando o carrossel está em foco.
+  - Fotos usam `loading="lazy"`, a partir da segunda.
+- **Tela cheia:** clicar numa foto abre o visor `<dialog>`, que navega (‹ › e setas do teclado) **só pelas fotos daquele evento**, com legenda "3 de 5 · Título público".
+- **Vídeos:** entram no carrossel com o ícone de play e tocam no visor.
+- **Movimento:** com `prefers-reduced-motion`, a rolagem entre fotos é instantânea.
+
+## 9.6 Textos alternativos (alt): revisão de todas as imagens do site
+
+| Imagem | alt |
+|---|---|
+| Logo no topo e na capa | "Brasamiga" (texto do logo) |
+| Foto de capa (decorativa, com texto por cima) | `alt=""` com `role="presentation"` |
+| Foto de evento no carrossel | `midia.alt` se preenchido; senão "Foto 2 de 5 do evento: {título público}" |
+| Vídeo de evento | `aria-label` "Vídeo 1 de 5 do evento: {título público}" |
+| Foto no visor | O mesmo alt da foto de origem |
+| Miniaturas da caixa de entrada (admin) | "Foto sem evento: {nome do arquivo}" |
+| Fotos e vídeos na página do evento (admin) | `midia.alt` ou "Foto N do evento {título}" |
+| Ícone de favicon e marca-d'água | Sem alt (não são `<img>` de conteúdo) |
+
+Na página do evento, cada mídia ganha o campo **"Descrição da foto (para leitores de tela)"**, que vai em `midia.alt`, com até 200 caracteres. Os botões de seta do carrossel e do visor têm `aria-label` ("Foto anterior", "Próxima foto").
+
+## 9.7 Testes
+
+- **Banco:**
+  - a migração acrescenta `titulo_publico`, `categoria`, `convidados`, `pacote` e `midias.alt` sem perder dados;
+  - a `caixa_entrada` marca arquivos como importados ou ignorados;
+  - um arquivo alterado volta para a caixa.
+- **Caixa de entrada:**
+  - lista só os arquivos não tratados, sem incluir a `foto_capa`;
+  - "Adicionar ao evento" cria as mídias, gera WEBP sem GPS e tira o arquivo da caixa;
+  - "Ignorar" tira o arquivo da caixa;
+  - um arquivo inválido fica na caixa com erro, e os outros são importados;
+  - exige senha.
+- **Galeria:**
+  - um evento realizado sem mídia não aparece;
+  - uma foto solta da pasta não aparece em nenhum lugar do HTML público;
+  - o card mostra categoria, convidados, título público, mês/ano e pacote;
+  - **`titulo`, `local` e `descricao` reais não aparecem** (strings marcadoras);
+  - os `data-*` estão normalizados (sem acento);
+  - um evento realizado sem título público é recusado no admin.
+- **Alt:**
+  - todo `<img>` da página pública tem o atributo `alt`;
+  - fotos de evento usam o alt manual ou o automático;
+  - o alt manual editado no admin aparece no site.
+- **JavaScript:** checado no navegador com screenshots (computador e celular):
+  - busca, chips e a mensagem de "nenhum resultado";
+  - o link com filtros;
+  - o carrossel (setas e contador);
+  - o visor navegando dentro do evento.
+
+## 9.8 Fora do escopo (parte 2)
+
+- Reordenar as fotos dentro do evento (a ordem é a de envio).
+- Mover uma foto de um evento para outro (dá para excluir e reenviar).
+- Paginação ou "carregar mais" (só entra se a galeria passar de ~60 eventos).
+- Busca por data ou intervalo de datas.
