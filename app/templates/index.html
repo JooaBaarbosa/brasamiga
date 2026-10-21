@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% macro midia(item, url, legenda) %}
+  <button class="foto" type="button" data-src="{{ url }}" data-tipo="{{ item.tipo }}" aria-label="Ampliar {{ legenda }}">
+    {% if item.tipo == "video" %}
+      <video src="{{ url }}#t=0.5" muted playsinline preload="metadata"></video>
+      <span class="foto-play" aria-hidden="true"></span>
+    {% else %}
+      <img src="{{ url }}" alt="{{ legenda }}" loading="lazy">
+    {% endif %}
+  </button>
+{% endmacro %}
+
+{% block conteudo %}
+{% set tem_eventos = realizados or galeria %}
+
+<header class="hero">
+  <nav class="topo" aria-label="Seções">
+    <a class="topo-marca" href="/">
+      {% if logo %}<img src="{{ logo }}" alt="{{ marca.nome }}">{% else %}{{ marca.nome }}{% endif %}
+    </a>
+    <ul class="topo-links">
+      <li><a href="#servicos">Serviços</a></li>
+      <li><a href="#cardapio">Cardápio</a></li>
+      {% if tem_eventos %}<li><a href="#eventos">Eventos</a></li>{% endif %}
+      {% if futuros %}<li><a href="#agenda">Agenda</a></li>{% endif %}
+      <li><a class="topo-cta" href="#orcamento">Orçamento</a></li>
+    </ul>
+  </nav>
+
+  <div class="hero-corpo">
+    <h1 class="hero-titulo">{{ marca.nome or "Brasamiga" }}</h1>
+    <p class="hero-slogan">{{ marca.slogan }}</p>
+    <div class="hero-acoes">
+      <a class="botao botao-brasa" href="#orcamento">Pedir orçamento</a>
+      {% if whatsapp_url %}
+        <a class="botao botao-contorno" href="{{ whatsapp_url }}" target="_blank" rel="noopener">Chamar no WhatsApp</a>
+      {% endif %}
+    </div>
+    {% if marca.cidade %}<p class="hero-cidade">Atendemos {{ marca.cidade }}</p>{% endif %}
+  </div>
+
+  <div class="brasas" aria-hidden="true">
+    {% for i in range(22) %}<span style="--i: {{ i }}"></span>{% endfor %}
+  </div>
+</header>
+
+<main>
+  {% if servicos %}
+  <section id="servicos" class="secao">
+    <div class="secao-cabeca">
+      <h2>Churrasco para cada tipo de festa</h2>
+      <p>Do almoço de família à formatura com centenas de convidados, a gente adapta a estrutura ao tamanho do seu evento.</p>
+    </div>
+    <ul class="servicos">
+      {% for s in servicos %}
+        <li>
+          <h3>{{ s.nome }}</h3>
+          <p>{{ s.descricao }}</p>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <section class="secao passos" aria-labelledby="passos-titulo">
+    <h2 id="passos-titulo">Como funciona</h2>
+    <ol>
+      <li>
+        <h3>Você conta sobre o evento</h3>
+        <p>Data, local e quantas pessoas vão. Pode ser pelo formulário ou pelo WhatsApp.</p>
+      </li>
+      <li>
+        <h3>A gente monta o cardápio</h3>
+        <p>Escolhemos juntos as carnes e os acompanhamentos e enviamos o orçamento.</p>
+      </li>
+      <li>
+        <h3>No dia, o fogo é com a gente</h3>
+        <p>Chegamos antes, montamos a estrutura, servimos os convidados e deixamos tudo limpo.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section id="cardapio" class="cardapio">
+    <div class="cardapio-quadro">
+      <div class="cardapio-cabeca">
+        <h2>Cardápio</h2>
+        <p>Uma base para começar a conversa. Dá para trocar, tirar e acrescentar itens no seu orçamento.</p>
+      </div>
+
+      {% if categorias %}
+      <div class="cardapio-colunas">
+        {% for c in categorias %}
+          <div class="cardapio-categoria">
+            <h3>{{ c.categoria }}</h3>
+            <ul>{% for item in c.itens %}<li>{{ item }}</li>{% endfor %}</ul>
+          </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if cardapio.imagens %}
+      <div class="cardapio-imagens">
+        {% for url in cardapio.imagens %}{{ midia({"tipo": "imagem"}, url, "Cardápio") }}{% endfor %}
+      </div>
+      {% endif %}
+
+      {% if cardapio.pdfs %}
+      <div class="cardapio-pdfs">
+        {% for pdf in cardapio.pdfs %}
+          <a class="botao botao-brasa" href="{{ pdf.url }}" target="_blank" rel="noopener">Baixar {{ pdf.nome }} (PDF)</a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  {% if tem_eventos %}
+  <section id="eventos" class="secao">
+    <div class="secao-cabeca">
+      <h2>Eventos que a gente já serviu</h2>
+      <p>Fotos e vídeos de festas reais feitas pela nossa equipe.</p>
+    </div>
+
+    {% for e in realizados %}
+      <article class="evento">
+        <header class="evento-cabeca">
+          <h3>{{ e.titulo }}</h3>
+          <p>
+            {% if e.data %}<time datetime="{{ e.data }}">{{ e.data | data_br }}</time>{% endif %}
+            {% if e.data and e.local %}, {% endif %}{{ e.local }}
+          </p>
+        </header>
+        {% if e.descricao %}<p class="evento-descricao">{{ e.descricao }}</p>{% endif %}
+        {% if e.midias %}
+          <div class="galeria">
+            {% for m in e.midias %}{{ midia(m, "/uploads/" ~ m.arquivo, e.titulo) }}{% endfor %}
+          </div>
+        {% endif %}
+      </article>
+    {% endfor %}
+
+    {% if galeria %}
+      <article class="evento">
+        {% if realizados %}<header class="evento-cabeca"><h3>Mais registros</h3></header>{% endif %}
+        <div class="galeria">
+          {% for m in galeria %}{{ midia(m, m.url, "Evento realizado pelo " ~ (marca.nome or "Brasamiga")) }}{% endfor %}
+        </div>
+      </article>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if futuros %}
+  <section id="agenda" class="secao agenda">
+    <div class="secao-cabeca">
+      <h2>Próximos eventos</h2>
+      <p>Onde a nossa churrasqueira vai estar acesa nas próximas semanas.</p>
+    </div>
+    <ul class="agenda-lista">
+      {% for e in futuros %}
+        <li class="agenda-item">
+          <div class="agenda-data">
+            {% if e.data %}
+              <time datetime="{{ e.data }}"><span class="agenda-dia">{{ e.data | dia }}</span><span class="agenda-mes">{{ e.data | mes }}</span></time>
+            {% else %}
+              <span class="agenda-mes">Data a confirmar</span>
+            {% endif %}
+          </div>
+          <div class="agenda-info">
+            <h3>{{ e.titulo }}</h3>
+            {% if e.local %}<p class="agenda-local">{{ e.local }}</p>{% endif %}
+            {% if e.descricao %}<p>{{ e.descricao }}</p>{% endif %}
+            {% if e.midias %}
+              <div class="galeria galeria-compacta">
+                {% for m in e.midias %}{{ midia(m, "/uploads/" ~ m.arquivo, e.titulo) }}{% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <section id="orcamento" class="orcamento">
+    <div class="orcamento-texto">
+      <h2>Vamos acender a churrasqueira na sua festa?</h2>
+      <p>Conte um pouco sobre o evento e a gente responde com cardápio e valores.</p>
+      {% if whatsapp_url %}
+        <p>Prefere conversar direto? <a href="{{ whatsapp_url }}" target="_blank" rel="noopener">Chame no WhatsApp{% if contato.telefone_exibicao %} {{ contato.telefone_exibicao }}{% endif %}</a>.</p>
+      {% endif %}
+    </div>
+
+    <form class="formulario" method="post" action="/orcamento">
+      {% if enviado %}
+        <p class="aviso aviso-ok" role="status">Recebemos seu pedido de orçamento. Vamos entrar em contato pelo telefone informado.</p>
+      {% elif erro %}
+        <p class="aviso aviso-erro" role="alert">Preencha seu nome e um telefone para a gente conseguir responder.</p>
+      {% endif %}
+
+      <div class="campo">
+        <label for="nome">Seu nome</label>
+        <input id="nome" name="nome" autocomplete="name" required maxlength="200">
+      </div>
+      <div class="campo">
+        <label for="telefone">WhatsApp ou telefone</label>
+        <input id="telefone" name="telefone" type="tel" autocomplete="tel" required maxlength="40">
+      </div>
+      <div class="campo">
+        <label for="email">E-mail <span class="opcional">(opcional)</span></label>
+        <input id="email" name="email" type="email" autocomplete="email" maxlength="200">
+      </div>
+      <div class="campo-duplo">
+        <div class="campo">
+          <label for="data_evento">Data do evento</label>
+          <input id="data_evento" name="data_evento" type="date">
+        </div>
+        <div class="campo">
+          <label for="convidados">Convidados</label>
+          <input id="convidados" name="convidados" type="number" min="1" inputmode="numeric">
+        </div>
+      </div>
+      {% if servicos %}
+      <div class="campo">
+        <label for="tipo_evento">Tipo de evento</label>
+        <select id="tipo_evento" name="tipo_evento">
+          <option value="">Escolha uma opção</option>
+          {% for s in servicos %}<option>{{ s.nome }}</option>{% endfor %}
+          <option>Outro</option>
+        </select>
+      </div>
+      {% endif %}
+      <div class="campo">
+        <label for="mensagem">Algo mais que a gente deva saber? <span class="opcional">(opcional)</span></label>
+        <textarea id="mensagem" name="mensagem" rows="4" maxlength="2000"></textarea>
+      </div>
+      <div class="isca" aria-hidden="true">
+        <label for="site">Não preencha</label>
+        <input id="site" name="site" tabindex="-1" autocomplete="off">
+      </div>
+      <button class="botao botao-brasa" type="submit">Pedir orçamento</button>
+    </form>
+  </section>
+</main>
+
+<footer class="rodape">
+  <p class="rodape-marca">{{ marca.nome or "Brasamiga" }}</p>
+  <ul>
+    {% if contato.telefone_exibicao and whatsapp_url %}<li><a href="{{ whatsapp_url }}" target="_blank" rel="noopener">WhatsApp {{ contato.telefone_exibicao }}</a></li>{% endif %}
+    {% if contato.email %}<li><a href="mailto:{{ contato.email }}">{{ contato.email }}</a></li>{% endif %}
+    {% if contato.instagram %}<li><a href="https://instagram.com/{{ contato.instagram }}" target="_blank" rel="noopener">Instagram @{{ contato.instagram }}</a></li>{% endif %}
+  </ul>
+</footer>
+
+<dialog class="visor" id="visor" aria-label="Foto ampliada">
+  <button class="visor-fechar" type="button" aria-label="Fechar">×</button>
+  <div class="visor-conteudo"></div>
+</dialog>
+{% endblock %}
+
+{% block scripts %}<script src="/static/js/site.js" defer></script>{% endblock %}

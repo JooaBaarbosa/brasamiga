@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}{{ marca.nome or "Brasamiga" }}: buffet de churrasco{% endblock %}</title>
+  <meta name="description" content="{{ marca.slogan }}">
+  <meta name="theme-color" content="#4a1512">
+  {% if logo %}<link rel="icon" href="{{ logo }}">{% endif %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Instrument+Sans:ital,wght@0,400..700;1,400&display=swap" rel="stylesheet">
+  {% block estilos %}<link rel="stylesheet" href="/static/css/site.css">{% endblock %}
+</head>
+<body>
+  {% block conteudo %}{% endblock %}
+  {% block scripts %}{% endblock %}
+</body>
+</html>

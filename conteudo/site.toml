@@ -1,0 +1,48 @@
+# Textos e contatos da landing page do Brasamiga.
+# Edite à vontade: as mudanças aparecem ao recarregar a página, sem reiniciar.
+# Itens marcados com "TROCAR" são exemplos e precisam dos seus dados reais.
+
+[marca]
+nome = "Brasamiga"
+slogan = "Buffet de churrasco no seu evento. A gente leva a churrasqueira, o fogo e a equipe, e você cuida dos convidados."
+cidade = "São Paulo e região"  # TROCAR: onde vocês atendem
+
+[contato]
+whatsapp = "5511999999999"            # TROCAR: só números, com 55 + DDD
+telefone_exibicao = "(11) 99999-9999"  # TROCAR
+email = "contato@brasamiga.com.br"     # TROCAR
+instagram = "brasamiga"                # TROCAR: sem o @
+
+# Serviços: cada bloco [[servicos]] vira um item da lista.
+[[servicos]]
+nome = "Casamentos"
+descricao = "Churrasco servido na mesa ou em ilhas, com equipe uniformizada do começo ao fim da festa."
+
+[[servicos]]
+nome = "Aniversários e festas em casa"
+descricao = "A gente monta a churrasqueira no seu quintal, serve e deixa a área limpa no final."
+
+[[servicos]]
+nome = "Confraternizações de empresa"
+descricao = "Cardápio para equipes de 30 a centenas de pessoas, com nota fiscal e horário combinado."
+
+[[servicos]]
+nome = "Formaturas e eventos grandes"
+descricao = "Estrutura com mais churrasqueiras e equipe ampliada para servir muita gente sem fila."
+
+# Cardápio em texto. Para um PDF ou fotos do cardápio, coloque os arquivos em conteudo/cardapio/.
+[[cardapio]]
+categoria = "Carnes na brasa"
+itens = ["Picanha", "Fraldinha", "Maminha", "Contrafilé", "Costela no bafo", "Cupim"]
+
+[[cardapio]]
+categoria = "Para beliscar"
+itens = ["Linguiça toscana", "Coração de frango", "Queijo coalho", "Pão de alho", "Asinha de frango"]
+
+[[cardapio]]
+categoria = "Acompanhamentos"
+itens = ["Arroz branco", "Farofa da casa", "Vinagrete", "Mandioca cozida", "Salada verde", "Maionese"]
+
+[[cardapio]]
+categoria = "Para fechar"
+itens = ["Abacaxi assado com canela", "Banana na brasa com doce de leite"]

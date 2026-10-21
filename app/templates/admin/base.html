@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>{% block titulo %}Painel{% endblock %} · Brasamiga</title>
+  <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body>
+  <header class="barra">
+    <a href="/admin" class="barra-marca">Brasamiga · painel</a>
+    <a href="/" target="_blank" rel="noopener">Ver o site</a>
+  </header>
+  <main class="pagina">
+    {% block conteudo %}{% endblock %}
+  </main>
+</body>
+</html>

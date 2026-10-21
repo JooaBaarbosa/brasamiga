@@ -1,0 +1,19 @@
+<label>Nome do evento
+  <input name="titulo" required maxlength="200" value="{{ evento.titulo if evento else '' }}" placeholder="Ex.: Casamento da Ana e do Pedro">
+</label>
+<fieldset class="opcoes">
+  <legend>Situação</legend>
+  <label><input type="radio" name="tipo" value="realizado" {% if not evento or evento.tipo == "realizado" %}checked{% endif %}> Já realizado (aparece na galeria)</label>
+  <label><input type="radio" name="tipo" value="futuro" {% if evento and evento.tipo == "futuro" %}checked{% endif %}> Vai acontecer (aparece na agenda)</label>
+</fieldset>
+<div class="linha">
+  <label>Data
+    <input type="date" name="data" value="{{ evento.data or '' if evento else '' }}">
+  </label>
+  <label>Local
+    <input name="local" maxlength="200" value="{{ evento.local if evento else '' }}" placeholder="Ex.: Sítio Recanto, Atibaia">
+  </label>
+</div>
+<label>Descrição <span class="dica">(opcional)</span>
+  <textarea name="descricao" rows="3" maxlength="3000">{{ evento.descricao if evento else '' }}</textarea>
+</label>
