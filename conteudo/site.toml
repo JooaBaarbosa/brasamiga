@@ -75,8 +75,6 @@ unidade = "só o serviço"
 rotulo_preco = "Valor"
 detalhe_preco = ""
 destaque = false
-nota = true   # aparece como uma linha abaixo dos pacotes, não como card
-nota_texto = "Só o churrasqueiro? Você fornece as carnes e a gente cuida da brasa:"
 incluso = "Churrasqueiro e utensílios de manuseio (pegadores, facas, tábuas). Carvão e descartáveis podem ser incluídos mediante ajuste do valor."
 
 [[pacotes.itens]]

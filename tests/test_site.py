@@ -16,13 +16,15 @@ def test_home_mostra_marca_pacotes_e_faq(client):
     assert "/cache/logo/" in html
 
 
-def test_layout_minimalista_com_capa_e_senepol_como_nota(client, settings):
+def test_layout_minimalista_com_capa_e_quatro_cards(client, settings):
     (settings.content_dir / "eventos-realizados" / "40DB4488-618F-46D8-B957-EDCF4BEAF35E.jpg").write_bytes(jpeg_bytes())
     html = client.get("/").text
     assert 'class="capa-foto"' in html and "-grande.webp" in html
-    assert "Só o churrasqueiro?" in html
-    assert 'id="pacote-senepol"' not in html
-    assert 'id="pacote-nelore"' in html
+    for pacote in ("senepol", "devon", "nelore", "angus"):
+        assert f'id="pacote-{pacote}"' in html, pacote
+    assert "a partir de" in html.split('id="pacote-senepol"')[1].split("</article>")[0]
+    assert "Só o churrasqueiro?" not in html
+    assert "Valores por pessoa para 15 a 39 convidados" not in html  # texto de desconto removido
     assert 'class="comparativo"' not in html
 
 

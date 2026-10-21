@@ -14,10 +14,8 @@
 {% block conteudo %}
 {% set marca = site.marca or {} %}
 {% set contato = site.contato or {} %}
-{% set info = site.pacotes_info or {} %}
 {% set todos = site.pacotes or [] %}
-{% set cards = todos | rejectattr("nota") | list %}
-{% set notas = todos | selectattr("nota") | list %}
+{% set cards = todos %}
 {% set nome = marca.nome or "Brasamiga" %}
 {% set legenda_foto = "Churrasco servido pela " ~ nome %}
 {% set fotos = galeria | rejectattr("url", "equalto", capa.url if capa else "") | list %}
@@ -57,8 +55,8 @@
         <article class="pacote{{ ' pacote-destaque' if p.destaque }}" id="pacote-{{ p.id }}">
           {% if p.destaque %}<span class="selo">Mais pedido</span>{% endif %}
           <h3 class="pacote-nome">{{ p.nome }}</h3>
-          <p class="pacote-preco">{{ p.preco }} <span>{{ p.rotulo_preco | lower }}</span></p>
-          {% if carnes %}<p class="pacote-carnes">{{ carnes.texto }}</p>{% endif %}
+          <p class="pacote-preco">{% if p.prefixo_preco %}<small>{{ p.prefixo_preco }}</small> {% endif %}{{ p.preco }} <span>{{ p.unidade }}</span></p>
+          <p class="pacote-carnes">{{ carnes.texto if carnes else p.resumo }}</p>
           <details class="pacote-detalhes">
             <summary>Ver cardápio completo</summary>
             <dl>
@@ -70,10 +68,6 @@
         </article>
       {% endfor %}
     </div>
-    {% for p in notas %}
-      <p class="pacote-nota">{{ p.nota_texto or p.resumo }} <a href="#orcamento" data-pacote="{{ p.nome }}">{{ p.nome }}, {{ p.prefixo_preco }} {{ p.preco }}</a>.</p>
-    {% endfor %}
-    {% if info.legenda %}<p class="legenda">{{ info.legenda }}</p>{% endif %}
   </section>
   {% endif %}
 

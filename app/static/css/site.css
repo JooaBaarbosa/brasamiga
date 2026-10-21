@@ -13,7 +13,7 @@
   --rotulo: "Oswald", "Arial Narrow", sans-serif;
   --texto: "Lato", system-ui, sans-serif;
 
-  --limite: 64rem;
+  --limite: 72rem;
   --gutter: clamp(1rem, 5vw, 3rem);
   --raio: 0.75rem;
 }
@@ -83,15 +83,18 @@ a { color: inherit; }
 .titulo-claro { color: var(--papel); }
 
 /* Pacotes */
-.pacotes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; align-items: start; }
+.pacotes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; align-items: stretch; }
 .pacote { position: relative; display: flex; flex-direction: column; gap: 0.6rem; padding: 1.75rem 1.5rem 1.5rem; background: #FBF6EE; border: 1px solid var(--linha); border-radius: var(--raio); }
 .pacote-destaque { border: 2px solid var(--brasa); }
 .selo { position: absolute; top: -0.75rem; left: 1.5rem; padding: 0.2rem 0.8rem; border-radius: 999px; background: var(--brasa); color: #fff; font: 500 0.75rem/1.4 var(--rotulo); text-transform: uppercase; letter-spacing: 0.05em; }
 .pacote-nome { font: 400 2.25rem/1 var(--titulo); text-transform: uppercase; }
 .pacote-preco { color: var(--brasa); font: 400 1.6rem/1.1 var(--rotulo); }
-.pacote-preco span { color: var(--suave); font: 400 0.85rem var(--texto); }
+.pacote-preco small { display: block; color: var(--suave); font: 400 0.85rem var(--texto); }
+.pacote-preco span { display: block; color: var(--suave); font: 400 0.82rem var(--texto); }
 .pacote-carnes { color: var(--suave); font-size: 0.95rem; min-height: 3em; }
-.pacote .botao { margin-top: 0.4rem; }
+.pacote .botao { width: 100%; margin-top: auto; padding-inline: 0.75rem; font-size: 0.9rem; white-space: nowrap; }
+.pacote { padding: 1.75rem 1.25rem 1.25rem; }
+.pacote-detalhes { margin-bottom: 0.6rem; }
 .pacote-detalhes summary { cursor: pointer; color: var(--tinta); font: 500 0.9rem/1.4 var(--rotulo); text-transform: uppercase; letter-spacing: 0.04em; }
 .pacote-detalhes summary:hover { color: var(--brasa); }
 .pacote-detalhes dl { margin-top: 0.75rem; }
@@ -99,9 +102,6 @@ a { color: inherit; }
 .pacote-detalhes dt { color: var(--brasa); font: 400 0.8rem/1.4 var(--rotulo); text-transform: uppercase; letter-spacing: 0.04em; }
 .pacote-detalhes dd { font-size: 0.92rem; }
 .pacote-incluso { margin-top: 0.6rem; font-size: 0.85rem; color: var(--suave); }
-.pacote-nota { margin-top: 1.5rem; text-align: center; }
-.pacote-nota a { color: var(--brasa); font-weight: 700; }
-.legenda { max-width: 44rem; margin: 0.75rem auto 0; color: var(--suave); font-size: 0.85rem; text-align: center; }
 
 /* Fotos */
 .mosaico { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 0.5rem; aspect-ratio: 3 / 2; }
@@ -181,6 +181,9 @@ a { color: inherit; }
 .visor-fechar { position: absolute; top: -0.9rem; right: -0.9rem; z-index: 1; width: 2.75rem; height: 2.75rem; border: 0; border-radius: 50%; background: var(--brasa); color: #fff; font-size: 1.6rem; line-height: 1; cursor: pointer; }
 
 /* Celular */
+@media (max-width: 64rem) {
+  .pacotes { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 1rem; }
+}
 @media (max-width: 52rem) {
   .pacotes { grid-template-columns: 1fr; gap: 1.5rem; }
   .pacote-carnes { min-height: 0; }
