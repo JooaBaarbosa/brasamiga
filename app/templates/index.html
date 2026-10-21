@@ -71,6 +71,15 @@
   </section>
   {% endif %}
 
+  {% set ag = site.agenda or {} %}
+  <section id="agenda" class="secao">
+    <h2 class="titulo">{{ ag.titulo or "Agenda" }}</h2>
+    {% if ag.texto %}<p class="agenda-texto">{{ ag.texto }}</p>{% endif %}
+    <div class="calendario" data-api="/api/agenda" data-modo="publico"
+         data-alvo-data="#orcamento input[name=data_evento]" data-rolar-para="#orcamento"></div>
+    <noscript><p class="agenda-texto">Ative o JavaScript para ver a agenda ou chame a gente no WhatsApp.</p></noscript>
+  </section>
+
   {% if fotos or realizados %}
   <section id="eventos" class="secao secao-fotos">
     <h2 class="titulo">Eventos realizados</h2>
@@ -96,19 +105,6 @@
   </section>
   {% endif %}
 
-  {% if futuros %}
-  <section id="agenda" class="secao">
-    <h2 class="titulo">Próximos eventos</h2>
-    <ul class="agenda">
-      {% for e in futuros %}
-        <li>
-          <span class="agenda-data">{% if e.data %}<time datetime="{{ e.data }}">{{ e.data | dia }} {{ e.data | mes }}</time>{% else %}A confirmar{% endif %}</span>
-          <span><strong>{{ e.titulo }}</strong>{% if e.local %} · {{ e.local }}{% endif %}</span>
-        </li>
-      {% endfor %}
-    </ul>
-  </section>
-  {% endif %}
 
   <section id="duvidas" class="secao">
     <h2 class="titulo">Dúvidas</h2>
@@ -190,4 +186,7 @@
 </dialog>
 {% endblock %}
 
-{% block scripts %}<script src="/static/js/site.js" defer></script>{% endblock %}
+{% block scripts %}
+<script src="/static/js/site.js" defer></script>
+<script src="/static/js/agenda.js" defer></script>
+{% endblock %}

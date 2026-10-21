@@ -53,14 +53,11 @@ def test_galeria_da_pasta_so_publica_versao_web(client, settings):
     assert client.get("/conteudo/site.toml").status_code == 404
 
 
-def test_agenda_so_aparece_com_evento_futuro(client, settings):
-    assert "Próximos eventos" not in client.get("/").text
-    db = Database(settings.database_url)
-    db.criar_evento("Formatura de Medicina", date(2099, 12, 12), "Campinas", "", "futuro")
-    db.criar_evento("Já passou", date(2001, 1, 1), "", "", "futuro")
+def test_evento_futuro_nunca_mostra_nome_nem_local(client, settings):
+    Database(settings.database_url).criar_evento("Formatura de Medicina", date(2099, 12, 12), "Campinas", "", "futuro")
     html = client.get("/").text
-    assert "Próximos eventos" in html and "Formatura de Medicina" in html
-    assert "Já passou" not in html
+    assert "Formatura de Medicina" not in html and "Campinas" not in html
+    assert 'id="agenda"' in html
 
 
 def test_orcamento_salva_e_abre_whatsapp(client, settings):
@@ -131,11 +128,14 @@ def test_convidados_com_digito_estranho_nao_derruba(client, settings):
 def test_agenda_usa_o_dia_do_fuso_configurado(client, settings, monkeypatch):
     from app import relogio
 
-    Database(settings.database_url).criar_evento("Festa de hoje", date(2099, 12, 12), "", "", "futuro")
+    from datetime import time
+
+    Database(settings.database_url).criar_evento("Festa de hoje", date(2099, 12, 12), "", "", "futuro",
+                                                hora_inicio=time(12), hora_fim=time(17))
     monkeypatch.setattr(relogio, "hoje", lambda: date(2099, 12, 13))
-    assert "Festa de hoje" not in client.get("/").text
+    assert client.get("/api/agenda?mes=2099-12").json()["dias"] == {}
     monkeypatch.setattr(relogio, "hoje", lambda: date(2099, 12, 12))
-    assert "Festa de hoje" in client.get("/").text
+    assert "2099-12-12" in client.get("/api/agenda?mes=2099-12").json()["dias"]
 
 
 def test_site_toml_quebrado_mostra_linha(client, settings):

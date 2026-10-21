@@ -53,6 +53,20 @@ def test_api_agenda_evento_noturno_no_dia_de_inicio(client, db):
     assert client.get("/api/agenda?mes=2026-10").json()["dias"] == {"2026-10-31": [{"inicio": "20:00", "fim": "02:00"}]}
 
 
+def test_secao_agenda_usa_api_e_esconde_nomes(client, db):
+    _futuro(db, date(2026, 10, 31), time(12), time(17))
+    html = client.get("/").text
+    assert 'data-api="/api/agenda"' in html and 'data-modo="publico"' in html
+    assert "Próximos eventos" not in html
+    assert "SECRET" not in html
+    assert "/static/js/agenda.js" in html
+
+
+def test_admin_tem_calendario(client, db):
+    html = client.get("/admin", auth=AUTH).text
+    assert 'data-api="/admin/api/agenda"' in html and 'data-modo="admin"' in html
+
+
 def test_api_agenda_admin_exige_senha_e_traz_nome(client, db):
     ev = _futuro(db, date(2026, 10, 31), time(12), time(17), titulo="Casamento da Ana")
     assert client.get("/admin/api/agenda?mes=2026-10").status_code == 401

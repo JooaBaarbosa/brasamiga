@@ -19,6 +19,14 @@
 {% endmacro %}
 
 {% block conteudo %}
+<section class="bloco" id="agenda">
+  <h2>Agenda</h2>
+  <div class="calendario calendario-admin" data-api="/admin/api/agenda" data-modo="admin"
+       data-alvo-data="#form-evento input[name=data]" data-rolar-para="#form-evento"></div>
+  <p class="dica">Vermelho = vai acontecer · verde = já realizado. Clique num dia para ver os eventos e cadastrar um novo.</p>
+</section>
+<script src="/static/js/agenda.js" defer></script>
+
 {% if caixa or erros_caixa %}
 <section class="bloco" id="caixa">
   <h2>Fotos sem evento ({{ caixa | length }})</h2>
