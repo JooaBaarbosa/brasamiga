@@ -19,9 +19,9 @@
 {% endmacro %}
 
 {% block conteudo %}
-<section class="bloco">
+<section class="bloco" id="form-evento">
   <h1>Cadastrar evento</h1>
-  <p class="dica">Eventos realizados aparecem na galeria do site. Eventos futuros aparecem na agenda até a data passar.</p>
+  <p class="dica">Eventos realizados aparecem na galeria do site (só com o título para o site). Eventos futuros aparecem na agenda apenas como horário ocupado.</p>
   <form method="post" action="/admin/eventos" enctype="multipart/form-data" class="form">
     {% include "admin/_campos_evento.html" %}
     <label>Fotos e vídeos

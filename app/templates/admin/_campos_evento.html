@@ -1,19 +1,52 @@
-<label>Nome do evento
-  <input name="titulo" required maxlength="200" value="{{ evento.titulo if evento else '' }}" placeholder="Ex.: Casamento da Ana e do Pedro">
+{% if erros_form %}
+  <div class="aviso erro" role="alert">
+    <p>O evento não foi salvo:</p>
+    <ul>{% for e in erros_form %}<li>{{ e }}</li>{% endfor %}</ul>
+  </div>
+{% endif %}
+<label>Nome do evento <span class="dica">(só você vê)</span>
+  <input name="titulo" required maxlength="200" value="{{ form.titulo }}" placeholder="Ex.: Casamento da Ana e do Pedro">
 </label>
 <fieldset class="opcoes">
   <legend>Situação</legend>
-  <label><input type="radio" name="tipo" value="realizado" {% if not evento or evento.tipo == "realizado" %}checked{% endif %}> Já realizado (aparece na galeria)</label>
-  <label><input type="radio" name="tipo" value="futuro" {% if evento and evento.tipo == "futuro" %}checked{% endif %}> Vai acontecer (aparece na agenda)</label>
+  <label><input type="radio" name="tipo" value="realizado" {% if form.tipo != "futuro" %}checked{% endif %}> Já realizado (aparece na galeria)</label>
+  <label><input type="radio" name="tipo" value="futuro" {% if form.tipo == "futuro" %}checked{% endif %}> Vai acontecer (aparece na agenda)</label>
 </fieldset>
-<div class="linha">
+<div class="linha linha-3">
   <label>Data
-    <input type="date" name="data" value="{{ evento.data.isoformat() if evento and evento.data else '' }}">
+    <input type="date" name="data" value="{{ form.data }}">
   </label>
-  <label>Local
-    <input name="local" maxlength="200" value="{{ evento.local if evento else '' }}" placeholder="Ex.: Espaço Villa, Campinas">
+  <label>Início
+    <input type="time" name="hora_inicio" value="{{ form.hora_inicio }}">
+  </label>
+  <label>Fim
+    <input type="time" name="hora_fim" value="{{ form.hora_fim }}">
   </label>
 </div>
-<label>Descrição <span class="dica">(opcional)</span>
-  <textarea name="descricao" rows="3" maxlength="3000">{{ evento.descricao if evento else '' }}</textarea>
+<p class="dica">Início e fim são obrigatórios para eventos que vão acontecer. Fim antes do início = termina no dia seguinte.</p>
+<label>Local <span class="dica">(só você vê)</span>
+  <input name="local" maxlength="200" value="{{ form.local }}" placeholder="Ex.: Espaço Villa, Campinas">
+</label>
+<label>Título para o site <span class="dica">(o que o cliente vê; obrigatório para eventos realizados)</span>
+  <input name="titulo_publico" maxlength="120" value="{{ form.titulo_publico }}" placeholder="Ex.: Casamento no interior com mesa farta">
+  <span class="dica">Nome e local reais nunca aparecem no site.</span>
+</label>
+<div class="linha linha-3">
+  <label>Tipo de evento
+    <select name="categoria">
+      {% for c in opcoes.categorias %}<option{% if form.categoria == c %} selected{% endif %}>{{ c }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Convidados
+    <input type="number" name="convidados" min="1" max="5000" inputmode="numeric" value="{{ form.convidados }}">
+  </label>
+  <label>Pacote servido
+    <select name="pacote">
+      <option value="">—</option>
+      {% for p in opcoes.pacotes %}<option{% if form.pacote == p %} selected{% endif %}>{{ p }}</option>{% endfor %}
+    </select>
+  </label>
+</div>
+<label>Descrição <span class="dica">(só você vê)</span>
+  <textarea name="descricao" rows="3" maxlength="3000">{{ form.descricao }}</textarea>
 </label>

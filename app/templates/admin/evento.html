@@ -15,7 +15,7 @@
     <ul>{% for a in avisos %}<li>{{ a }}</li>{% endfor %}</ul>
   </div>
 {% endif %}
-{% if salvo and not erros %}
+{% if salvo and not erros and not erros_form %}
   <p class="aviso ok" role="status">Evento salvo.</p>
 {% endif %}
 
@@ -37,12 +37,19 @@
   {% if midias %}
     <ul class="midias">
       {% for m in midias %}
-        <li>
+        {% set descricao_auto = ("Vídeo " if m.tipo == "video" else "Foto ") ~ loop.index ~ " do evento " ~ evento.titulo %}
+        <li id="midia-{{ m.id }}">
           {% if m.tipo == "video" %}
-            <video src="{{ m.url_original }}" controls preload="metadata"></video>
+            <video src="{{ m.url_original }}" controls preload="metadata" aria-label="{{ m.alt or descricao_auto }}"></video>
           {% else %}
-            <a href="{{ m.url_original }}" target="_blank" rel="noopener"><img src="{{ m.url }}" alt="" loading="lazy"></a>
+            <a href="{{ m.url_original }}" target="_blank" rel="noopener"><img src="{{ m.url }}" alt="{{ m.alt or descricao_auto }}" loading="lazy"></a>
           {% endif %}
+          <form method="post" action="/admin/midias/{{ m.id }}/alt" class="form-alt">
+            <label>Descrição da foto <span class="dica">(para leitores de tela)</span>
+              <input name="alt" maxlength="200" value="{{ m.alt or '' }}" placeholder="Ex.: mesa de frios com pão de alho">
+            </label>
+            <button type="submit" class="secundario">Salvar descrição</button>
+          </form>
           <form method="post" action="/admin/midias/{{ m.id }}/excluir">
             <button type="submit" class="perigo">Excluir {{ "vídeo" if m.tipo == "video" else "foto" }}</button>
           </form>

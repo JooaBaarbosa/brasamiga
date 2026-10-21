@@ -226,6 +226,10 @@ class Database:
         self._executar(delete(midias).where(midias.c.id == midia_id))
         return linhas[0]
 
+    def obter_midia(self, midia_id: int) -> dict | None:
+        linhas = self._linhas(select(midias).where(midias.c.id == midia_id))
+        return linhas[0] if linhas else None
+
     def atualizar_alt(self, midia_id: int, alt: str) -> None:
         self._executar(update(midias).where(midias.c.id == midia_id).values(alt=alt or None))
 
