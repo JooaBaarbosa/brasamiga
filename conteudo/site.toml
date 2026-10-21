@@ -1,48 +1,316 @@
-# Textos e contatos da landing page do Brasamiga.
-# Edite à vontade: as mudanças aparecem ao recarregar a página, sem reiniciar.
-# Itens marcados com "TROCAR" são exemplos e precisam dos seus dados reais.
+# Conteúdo da landing page do Brasamiga (tirado da Proposta Comercial 2026).
+# Edite e recarregue a página: não precisa reiniciar o site.
+# Dica: mantenha as aspas e os colchetes. Se algo quebrar, o site mostra a linha do erro.
 
 [marca]
 nome = "Brasamiga"
-slogan = "Buffet de churrasco no seu evento. A gente leva a churrasqueira, o fogo e a equipe, e você cuida dos convidados."
-cidade = "São Paulo e região"  # TROCAR: onde vocês atendem
+chamada = "Churrasco para eventos"
+subtitulo = "De reuniões em família a grandes eventos corporativos"
+logo_escuro = "LOGO-03.png"   # logo branco sobre preto, usado nas faixas escuras
+regiao = "Capital e Grande São Paulo"
 
 [contato]
-whatsapp = "5511999999999"            # TROCAR: só números, com 55 + DDD
-telefone_exibicao = "(11) 99999-9999"  # TROCAR
-email = "contato@brasamiga.com.br"     # TROCAR
-instagram = "brasamiga"                # TROCAR: sem o @
+whatsapp = "5511993433998"          # só números: 55 + DDD + número
+whatsapp_exibicao = "(11) 99343-3998"
+instagram = "brasamiga"             # sem o @
 
-# Serviços: cada bloco [[servicos]] vira um item da lista.
-[[servicos]]
-nome = "Casamentos"
-descricao = "Churrasco servido na mesa ou em ilhas, com equipe uniformizada do começo ao fim da festa."
+[sobre]
+titulo_destaque = "Paixão por churrasco,"
+titulo = "servida com capricho."
+paragrafos = [
+  "A Brasamiga nasceu da vontade de levar um churrasco bem feito para qualquer ocasião. Cuidamos de tudo — carnes, acompanhamentos, carvão, utensílios e serviço — para que você só se preocupe em receber bem os seus convidados.",
+  "Trabalhamos com cortes selecionados e técnica de brasa para entregar carne suculenta e no ponto certo. O cardápio é flexível: escolha um dos nossos pacotes ou monte um menu personalizado para o seu evento.",
+  "Atendemos desde pequenas reuniões familiares até eventos corporativos com dezenas de convidados, sempre com o mesmo padrão de qualidade e organização.",
+]
 
-[[servicos]]
-nome = "Aniversários e festas em casa"
-descricao = "A gente monta a churrasqueira no seu quintal, serve e deixa a área limpa no final."
+[[numeros]]
+valor = "2022"
+legenda = "no mercado desde"
 
-[[servicos]]
-nome = "Confraternizações de empresa"
-descricao = "Cardápio para equipes de 30 a centenas de pessoas, com nota fiscal e horário combinado."
+[[numeros]]
+valor = "SP"
+legenda = "capital e Grande SP"
 
-[[servicos]]
-nome = "Formaturas e eventos grandes"
-descricao = "Estrutura com mais churrasqueiras e equipe ampliada para servir muita gente sem fila."
+[[numeros]]
+valor = "15–200"
+legenda = "convidados por evento"
 
-# Cardápio em texto. Para um PDF ou fotos do cardápio, coloque os arquivos em conteudo/cardapio/.
-[[cardapio]]
-categoria = "Carnes na brasa"
-itens = ["Picanha", "Fraldinha", "Maminha", "Contrafilé", "Costela no bafo", "Cupim"]
+[[diferenciais]]
+titulo = "Tudo incluso"
+texto = "Carvão, descartáveis, rechaud, pegadores e demais utensílios já fazem parte do pacote."
 
-[[cardapio]]
-categoria = "Para beliscar"
-itens = ["Linguiça toscana", "Coração de frango", "Queijo coalho", "Pão de alho", "Asinha de frango"]
+[[diferenciais]]
+titulo = "Menu flexível"
+texto = "Troque, adicione ou remova itens; ajustamos o cardápio e o valor à sua necessidade."
 
-[[cardapio]]
-categoria = "Acompanhamentos"
-itens = ["Arroz branco", "Farofa da casa", "Vinagrete", "Mandioca cozida", "Salada verde", "Maionese"]
+[[diferenciais]]
+titulo = "Serviço completo"
+texto = "Chegamos 1h antes para montar tudo e servimos durante 4h de evento."
 
-[[cardapio]]
-categoria = "Para fechar"
-itens = ["Abacaxi assado com canela", "Banana na brasa com doce de leite"]
+[[diferenciais]]
+titulo = "Transparência"
+texto = "Preço por pessoa fechado, sem surpresa. Sinal de 50% para reservar a data, restante no fim do evento."
+
+[pacotes_info]
+introducao = "Quatro pacotes, do mais simples ao mais completo. As opções 2, 3 e 4 incluem churrasqueiro, carvão, descartáveis e utensílios; a opção 1 é só o serviço. Bebidas não estão inclusas em nenhum pacote."
+legenda = "Valores por pessoa para 15 a 39 convidados; de 40 a 59, 5% de desconto; 60 ou mais, 10%. Grupos menores que 15: sob consulta. Válido para capital e Grande São Paulo; consulte taxa de deslocamento."
+observacoes = [
+  "Vegetarianos: espetinho de legumes, queijo coalho e abobrinha grelhada sob consulta.",
+  "Crianças até 7 anos: 50% do valor.",
+  "Porção: ~450 g de carne por adulto.",
+  "Serviço de 5h (1h de montagem + 4h de evento). Sinal de 50% na reserva e 50% ao final do evento, via Pix.",
+]
+bebidas = "Quer bebidas inclusas? Os pacotes não contemplam bebidas, mas podemos incluir refrigerantes, água, cerveja ou drinks. Fale conosco pelo WhatsApp e ajustamos o valor por pessoa conforme a sua escolha."
+
+# Cada [[pacotes]] é um pacote. Os [[pacotes.itens]] logo abaixo pertencem a ele.
+[[pacotes]]
+id = "senepol"
+opcao = 1
+nome = "Senepol"
+resumo = "Só o serviço de churrasqueiro — você fornece as carnes."
+prefixo_preco = "a partir de"
+preco = "R$ 300"
+unidade = "só o serviço"
+rotulo_preco = "Valor"
+detalhe_preco = ""
+destaque = false
+incluso = "Churrasqueiro e utensílios de manuseio (pegadores, facas, tábuas). Carvão e descartáveis podem ser incluídos mediante ajuste do valor."
+
+[[pacotes.itens]]
+rotulo = "O que fazemos"
+texto = "Preparo, tempero, assar e servir as carnes fornecidas por você, com toda a técnica Brasamiga."
+
+[[pacotes.itens]]
+rotulo = "O que você fornece"
+texto = "Carnes, acompanhamentos e estrutura do local (churrasqueira). Carvão e descartáveis ficam por sua conta, salvo se combinados conosco."
+
+[[pacotes.itens]]
+rotulo = "Ideal para"
+texto = "Quem já tem tudo em casa e quer só a mão de obra especializada, ou eventos com cardápio próprio."
+
+[[pacotes.itens]]
+rotulo = "Como orçar"
+texto = "Envie a data, o número de convidados e o cardápio pretendido pelo WhatsApp e retornamos o valor."
+
+[[pacotes]]
+id = "devon"
+opcao = 2
+nome = "Devon"
+resumo = "O essencial bem feito, para grupos a partir de 15 pessoas."
+prefixo_preco = ""
+preco = "R$ 100"
+unidade = "por pessoa · mín. 15"
+rotulo_preco = "Por pessoa"
+detalhe_preco = "mín. 15 pessoas"
+destaque = false
+incluso = "Churrasqueiro, carvão, descartáveis (pratos, talheres e guardanapos) e utensílios (rechaud, pegadores etc.). Alteração ou exclusão de itens: informe para ajuste do cardápio e do preço."
+
+[[pacotes.itens]]
+rotulo = "Entradas"
+texto = "Pão de alho e queijo coalho com mel."
+
+[[pacotes.itens]]
+rotulo = "Carnes"
+texto = "Chorizo e fraldinha na manteiga de ervas."
+
+[[pacotes.itens]]
+rotulo = "Carnes brancas"
+texto = "Barriga, tulipa de frango e linguiça toscana."
+
+[[pacotes.itens]]
+rotulo = "Acompanhamentos"
+texto = "Arroz branco e farofa com bacon."
+
+[[pacotes.itens]]
+rotulo = "Saladas"
+texto = "Salada de folhas verdes e salada de maionese."
+
+[[pacotes.itens]]
+rotulo = "Molhos da casa"
+texto = "Vinagrete, molho de alho e pimenta artesanal."
+
+[[pacotes.itens]]
+rotulo = "Sobremesa"
+texto = "Abacaxi na brasa com açúcar e canela."
+
+[[pacotes]]
+id = "nelore"
+opcao = 3
+nome = "Nelore"
+resumo = "Cortes nobres e mesa completa — o mais pedido."
+prefixo_preco = ""
+preco = "R$ 120"
+unidade = "por pessoa · mín. 15"
+rotulo_preco = "Por pessoa"
+detalhe_preco = "mín. 15 pessoas · abaixo disso sob consulta"
+destaque = true
+incluso = "Churrasqueiro, carvão, descartáveis (pratos, talheres e guardanapos) e utensílios (rechaud, pegadores etc.). Alteração ou exclusão de itens: informe para ajuste do cardápio e do preço."
+
+[[pacotes.itens]]
+rotulo = "Entradas"
+texto = "Choripan, pão de alho e queijo coalho com mel."
+
+[[pacotes.itens]]
+rotulo = "Carnes"
+texto = "Ancho com crosta de alho e parmesão, fraldinha e picanha."
+
+[[pacotes.itens]]
+rotulo = "Carnes brancas"
+texto = "Barriga com geleia de pimenta, tulipa de frango e linguiça cuiabana."
+
+[[pacotes.itens]]
+rotulo = "Acompanhamentos"
+texto = "Farofa de bacon, feijão tropeiro e arroz branco."
+
+[[pacotes.itens]]
+rotulo = "Saladas"
+texto = "Batata em conserva, salada verde e salada de maionese."
+
+[[pacotes.itens]]
+rotulo = "Molhos da casa"
+texto = "Vinagrete, molho de alho, chimichurri e pimenta artesanal."
+
+[[pacotes.itens]]
+rotulo = "Sobremesa"
+texto = "Abacaxi na brasa com açúcar e canela."
+
+[[pacotes]]
+id = "angus"
+opcao = 4
+nome = "Angus"
+resumo = "A experiência completa, com wagyu, cordeiro e mesa farta."
+prefixo_preco = ""
+preco = "R$ 150"
+unidade = "por pessoa · mín. 15"
+rotulo_preco = "Por pessoa"
+detalhe_preco = "mín. 15 pessoas · abaixo disso sob consulta"
+destaque = false
+incluso = "Churrasqueiro, carvão, descartáveis (pratos, talheres e guardanapos) e utensílios (rechaud, pegadores etc.)."
+
+[[pacotes.itens]]
+rotulo = "Entradas"
+texto = "Choripan com queijo, queijo coalho com mel, pão de alho e provolone defumado."
+
+[[pacotes.itens]]
+rotulo = "Carnes"
+texto = "Fraldinha, picanha no alho, flat iron wagyu e carré de cordeiro com molho de hortelã."
+
+[[pacotes.itens]]
+rotulo = "Carnes brancas"
+texto = "Barriga com geleia, linguiça cuiabana ou de costela, linguiça toscana, coração marinado e tulipa de frango."
+
+[[pacotes.itens]]
+rotulo = "Acompanhamentos"
+texto = "Arroz biro-biro, arroz branco, farofa de ovo com banana da terra e feijão tropeiro."
+
+[[pacotes.itens]]
+rotulo = "Saladas"
+texto = "Salada verde, caponata, salada Caesar e salada de verão."
+
+[[pacotes.itens]]
+rotulo = "Molhos da casa"
+texto = "Vinagrete, molho de alho, chimichurri e pimenta artesanal."
+
+[[pacotes.itens]]
+rotulo = "Sobremesa"
+texto = "Abacaxi na brasa com açúcar e canela, banana na churrasqueira com doce de leite caseiro e sorvete."
+
+# Tabela comparativa: um valor por pacote, na ordem Senepol, Devon, Nelore, Angus.
+# "sim" vira o quadradinho vermelho de incluso; "—" significa não incluso.
+[[comparativo]]
+item = "Serviço de churrasqueiro"
+valores = ["sim", "sim", "sim", "sim"]
+
+[[comparativo]]
+item = "Carnes vermelhas (~450 g/pessoa)"
+valores = ["do cliente", "2 cortes", "3 cortes", "4 cortes"]
+
+[[comparativo]]
+item = "Carnes brancas e embutidos"
+valores = ["do cliente", "3", "3", "5"]
+
+[[comparativo]]
+item = "Entradas"
+valores = ["—", "2", "3", "4"]
+
+[[comparativo]]
+item = "Acompanhamentos"
+valores = ["—", "2", "3", "4"]
+
+[[comparativo]]
+item = "Saladas"
+valores = ["—", "2", "3", "4"]
+
+[[comparativo]]
+item = "Molhos da casa"
+valores = ["—", "sim", "sim", "sim"]
+
+[[comparativo]]
+item = "Sobremesa"
+valores = ["—", "1", "1", "2"]
+
+[[comparativo]]
+item = "Opção vegetariana / infantil"
+valores = ["—", "sim", "sim", "sim"]
+
+[[comparativo]]
+item = "Carvão + descartáveis + utensílios"
+valores = ["—", "sim", "sim", "sim"]
+
+[[condicoes]]
+titulo = "Serviço e horário"
+
+[[condicoes.itens]]
+rotulo = "Duração"
+texto = "5 horas no total — chegamos 1h antes para montar e preparar, e servimos durante as 4h seguintes."
+
+[[condicoes.itens]]
+rotulo = "Hora extra"
+texto = "após as 5h, caso precise estender, cobramos um acréscimo a combinar."
+
+[[condicoes.itens]]
+rotulo = "Bebidas"
+texto = "não estão inclusas nos pacotes, mas podem ser adicionadas (refrigerante, água, cerveja, drinks) com ajuste do valor por pessoa."
+
+[[condicoes]]
+titulo = "Pagamento e reserva"
+
+[[condicoes.itens]]
+rotulo = "Reserva"
+texto = "a data só é garantida com o pagamento do sinal (usado para reservar e realizar as compras)."
+
+[[condicoes.itens]]
+rotulo = "Forma"
+texto = "50% de sinal na reserva + 50% ao final do evento, via Pix."
+
+[[condicoes.itens]]
+rotulo = "Ajustes"
+texto = "alteração ou exclusão de itens do cardápio e confirmação do número final de convidados até 5 dias antes do evento; ajustamos menu e preço."
+
+[[condicoes.itens]]
+rotulo = "Faixas"
+texto = "preço de tabela para 15 a 39 convidados; 40 a 59: 5% de desconto; 60 ou mais: 10%. Abaixo de 15: valor sob consulta."
+
+[[faq]]
+pergunta = "Qual região vocês atendem?"
+resposta = "Capital e Grande São Paulo. Para outras cidades, consulte a taxa de deslocamento."
+
+[[faq]]
+pergunta = "Qual a quantidade de carne por pessoa?"
+resposta = "Cerca de 450 g de carne crua por adulto, além de entradas, acompanhamentos e sobremesa."
+
+[[faq]]
+pergunta = "Têm opção para crianças ou vegetarianos?"
+resposta = "Sim. Crianças até 7 anos pagam 50%; opções vegetarianas (espetinho de legumes, queijo coalho, abobrinha) sob consulta."
+
+[[faq]]
+pergunta = "E se meu evento tiver menos de 15 convidados?"
+resposta = "Atendemos, com valor sob consulta — os custos fixos do evento pesam mais em grupos pequenos. Acima de 40 convidados o desconto é automático (5% de 40 a 59, 10% a partir de 60)."
+
+[[faq]]
+pergunta = "Posso cancelar ou remarcar?"
+resposta = "Sim. Cancelando com mais de 15 dias, devolvemos 75% do sinal; de 8 a 15 dias, 50%; com 7 dias ou menos, 25% (as compras já foram feitas) — ou você converte 100% do sinal em crédito para remarcar em até 90 dias. Remarcação com 7+ dias de antecedência é gratuita, uma vez."
+
+[orcamento]
+titulo = "Vamos planejar o seu evento?"
+texto = "Envie data, local e número de convidados e receba seu orçamento no mesmo dia."
