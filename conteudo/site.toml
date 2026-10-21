@@ -297,15 +297,11 @@ texto = "a data só é garantida com o pagamento do sinal (usado para reservar e
 
 [[condicoes.itens]]
 rotulo = "Forma"
-texto = "50% de sinal na reserva + 50% ao final do evento, via Pix."
+texto = "50% de sinal na reserva + 50% ao final do evento, via Pix, Cartão de Credito e link de Pagamento"
 
 [[condicoes.itens]]
 rotulo = "Ajustes"
 texto = "alteração ou exclusão de itens do cardápio e confirmação do número final de convidados até 5 dias antes do evento; ajustamos menu e preço."
-
-[[condicoes.itens]]
-rotulo = "Faixas"
-texto = "preço de tabela para 15 a 39 convidados; 40 a 59: 5% de desconto; 60 ou mais: 10%. Abaixo de 15: valor sob consulta."
 
 [[faq]]
 pergunta = "Qual região vocês atendem?"
@@ -321,7 +317,7 @@ resposta = "Sim. Crianças até 7 anos pagam 50%; opções vegetarianas (espetin
 
 [[faq]]
 pergunta = "E se meu evento tiver menos de 15 convidados?"
-resposta = "Atendemos, com valor sob consulta — os custos fixos do evento pesam mais em grupos pequenos. Acima de 40 convidados o desconto é automático (5% de 40 a 59, 10% a partir de 60)."
+resposta = "Atendemos, com valor sob consulta — os custos fixos do evento pesam mais em grupos pequenos."
 
 [[faq]]
 pergunta = "Posso cancelar ou remarcar?"
