@@ -16,11 +16,32 @@ def test_home_mostra_marca_pacotes_e_faq(client):
     assert "/cache/logo/" in html
 
 
+def test_layout_minimalista_com_capa_e_senepol_como_nota(client, settings):
+    (settings.content_dir / "eventos-realizados" / "40DB4488-618F-46D8-B957-EDCF4BEAF35E.jpg").write_bytes(jpeg_bytes())
+    html = client.get("/").text
+    assert 'class="capa-foto"' in html and "-grande.webp" in html
+    assert "Só o churrasqueiro?" in html
+    assert 'id="pacote-senepol"' not in html
+    assert 'id="pacote-nelore"' in html
+    assert 'class="comparativo"' not in html
+
+
+def test_foto_da_capa_nao_se_repete_na_galeria(client, settings):
+    pasta = settings.content_dir / "eventos-realizados"
+    (pasta / "40DB4488-618F-46D8-B957-EDCF4BEAF35E.jpg").write_bytes(jpeg_bytes((800, 600)))
+    (pasta / "outra.jpg").write_bytes(jpeg_bytes((600, 800)))
+    html = client.get("/").text
+    capa_mini = html.split('class="capa-foto" src="')[1].split('"')[0].replace("-grande.webp", "-mini.webp")
+    assert capa_mini not in html
+    assert html.count('class="foto ') == 1
+
+
 def test_healthz(client):
     assert client.get("/healthz").json() == {"ok": True}
 
 
 def test_galeria_da_pasta_so_publica_versao_web(client, settings):
+    (settings.content_dir / "eventos-realizados" / "IMG_0001.JPEG").write_bytes(jpeg_bytes())  # vira a capa
     (settings.content_dir / "eventos-realizados" / "IMG_0385.JPEG").write_bytes(jpeg_bytes(gps=True))
     html = client.get("/").text
     assert "/cache/galeria/" in html and "-mini.webp" in html

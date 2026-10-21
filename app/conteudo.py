@@ -91,6 +91,15 @@ class Conteudo:
                 itens.append(ItemGaleria("video", url, url))
         return itens
 
+    def capa(self, nome: str | None) -> ItemGaleria | None:
+        """Foto de abertura: a indicada no site.toml ou, sem ela, a primeira da galeria."""
+        if nome:
+            arquivo = self.content_dir / "eventos-realizados" / Path(nome).name
+            if arquivo.is_file() and midia.tipo_por_extensao(arquivo.name) == "imagem":
+                if item := self._imagem(arquivo):
+                    return item
+        return next((i for i in self.galeria() if i.tipo == "imagem"), None)
+
     def preparar(self) -> dict:
         """Gera todas as versões web (fotos e vídeos). Roda no início do servidor e no build."""
         imagens = len([i for i in self.galeria() if i.tipo == "imagem"])

@@ -7,6 +7,7 @@ nome = "Brasamiga"
 chamada = "Churrasco para eventos"
 subtitulo = "De reuniões em família a grandes eventos corporativos"
 logo_escuro = "LOGO-03.png"   # logo branco sobre preto, usado nas faixas escuras
+foto_capa = "40DB4488-618F-46D8-B957-EDCF4BEAF35E.jpg"   # foto de abertura (de conteudo/eventos-realizados)
 regiao = "Capital e Grande São Paulo"
 
 [contato]
@@ -74,6 +75,8 @@ unidade = "só o serviço"
 rotulo_preco = "Valor"
 detalhe_preco = ""
 destaque = false
+nota = true   # aparece como uma linha abaixo dos pacotes, não como card
+nota_texto = "Só o churrasqueiro? Você fornece as carnes e a gente cuida da brasa:"
 incluso = "Churrasqueiro e utensílios de manuseio (pegadores, facas, tábuas). Carvão e descartáveis podem ser incluídos mediante ajuste do valor."
 
 [[pacotes.itens]]

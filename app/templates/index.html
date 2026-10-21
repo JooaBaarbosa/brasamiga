@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
-{% macro midia(item, legenda) %}
-  <button class="foto" type="button" data-src="{{ item.url }}" data-tipo="{{ item.tipo }}" aria-label="Ampliar: {{ legenda }}">
+{% macro midia(item, legenda, classe="") %}
+  <button class="foto {{ classe }}" type="button" data-src="{{ item.url }}" data-tipo="{{ item.tipo }}" aria-label="Ampliar: {{ legenda }}">
     {% if item.tipo == "video" %}
       <video src="{{ item.url }}#t=0.5" muted playsinline preload="metadata"></video>
       <span class="foto-play" aria-hidden="true"></span>
@@ -11,325 +11,184 @@
   </button>
 {% endmacro %}
 
-{% macro titulo_secao(texto, claro=false) %}
-  <h2 class="titulo-secao{{ ' titulo-secao-claro' if claro }}">{{ texto }}</h2>
-{% endmacro %}
-
 {% block conteudo %}
 {% set marca = site.marca or {} %}
 {% set contato = site.contato or {} %}
-{% set sobre = site.sobre or {} %}
 {% set info = site.pacotes_info or {} %}
-{% set pacotes = site.pacotes or [] %}
-{% set tem_eventos = realizados or galeria %}
+{% set todos = site.pacotes or [] %}
+{% set cards = todos | rejectattr("nota") | list %}
+{% set notas = todos | selectattr("nota") | list %}
+{% set nome = marca.nome or "Brasamiga" %}
+{% set legenda_foto = "Churrasco servido pela " ~ nome %}
+{% set fotos = galeria | rejectattr("url", "equalto", capa.url if capa else "") | list %}
 
-<header class="topo madeira">
+<header class="topo">
   <a class="topo-marca" href="/">
-    {% if logo %}<img src="{{ logo }}" alt="{{ marca.nome or 'Brasamiga' }}" width="120">{% else %}{{ marca.nome or "Brasamiga" }}{% endif %}
+    {% if logo %}<img src="{{ logo }}" alt="{{ nome }}" width="96">{% else %}{{ nome }}{% endif %}
   </a>
-  <nav aria-label="Seções">
-    <ul class="topo-links">
-      <li><a href="#pacotes">Pacotes</a></li>
-      {% if tem_eventos %}<li><a href="#eventos">Eventos</a></li>{% endif %}
-      <li><a href="#faq">Dúvidas</a></li>
-      {% if whatsapp_url %}<li><a class="botao botao-brasa botao-pequeno" href="{{ whatsapp_url }}" target="_blank" rel="noopener">WhatsApp</a></li>{% endif %}
-    </ul>
-  </nav>
+  {% if whatsapp_url %}<a class="botao botao-pequeno" href="{{ whatsapp_url }}" target="_blank" rel="noopener">WhatsApp</a>{% endif %}
 </header>
 
-<section class="hero madeira" aria-labelledby="hero-titulo">
-  <h1 id="hero-titulo" class="hero-logo">
-    {% if logo %}<img src="{{ logo }}" alt="{{ marca.nome or 'Brasamiga' }}" width="560">{% else %}{{ marca.nome or "Brasamiga" }}{% endif %}
-  </h1>
-  <p class="hero-chamada">{{ marca.chamada }}</p>
-  <span class="filete filete-centro" aria-hidden="true"></span>
-  <p class="hero-subtitulo">{{ marca.subtitulo }}</p>
-  <div class="hero-acoes">
-    <a class="botao botao-brasa" href="#orcamento">Pedir orçamento</a>
-    {% if whatsapp_url %}<a class="botao botao-contorno" href="{{ whatsapp_url }}" target="_blank" rel="noopener">Chamar no WhatsApp</a>{% endif %}
+<section class="capa" aria-labelledby="capa-titulo">
+  {% if capa %}<img class="capa-foto" src="{{ capa.url }}" alt="" fetchpriority="high">{% endif %}
+  <div class="capa-conteudo">
+    <h1 id="capa-titulo" class="capa-logo">
+      {% if logo %}<img src="{{ logo }}" alt="{{ nome }}" width="360">{% else %}{{ nome }}{% endif %}
+    </h1>
+    <p class="capa-chamada">{{ marca.chamada }}</p>
+    <p class="capa-sub">{{ marca.subtitulo }}</p>
+    <a class="botao" href="#orcamento">Pedir orçamento</a>
   </div>
 </section>
 
+{% if site.numeros %}
+<p class="numeros">
+  {% for n in site.numeros %}<span><strong>{{ n.valor }}</strong> {{ n.legenda }}</span>{% endfor %}
+</p>
+{% endif %}
+
 <main>
-  <section id="sobre" class="secao papel">
-    <div class="limite sobre">
-      <div class="sobre-texto">
-        <h2 class="titulo-grande"><span class="vermelho">{{ sobre.titulo_destaque }}</span> {{ sobre.titulo }}</h2>
-        {% for p in sobre.paragrafos or [] %}<p>{{ p }}</p>{% endfor %}
-      </div>
-      {% if site.numeros %}
-      <dl class="caixa-escura numeros">
-        {% for n in site.numeros %}
-          <div><dt>{{ n.valor }}</dt><dd>{{ n.legenda }}</dd></div>
-        {% endfor %}
-      </dl>
-      {% endif %}
+  {% if cards %}
+  <section id="pacotes" class="secao">
+    <h2 class="titulo">Escolha o seu pacote</h2>
+    <div class="pacotes">
+      {% for p in cards %}
+        {% set carnes = (p.itens or []) | selectattr("rotulo", "equalto", "Carnes") | first %}
+        <article class="pacote{{ ' pacote-destaque' if p.destaque }}" id="pacote-{{ p.id }}">
+          {% if p.destaque %}<span class="selo">Mais pedido</span>{% endif %}
+          <h3 class="pacote-nome">{{ p.nome }}</h3>
+          <p class="pacote-preco">{{ p.preco }} <span>{{ p.rotulo_preco | lower }}</span></p>
+          {% if carnes %}<p class="pacote-carnes">{{ carnes.texto }}</p>{% endif %}
+          <details class="pacote-detalhes">
+            <summary>Ver cardápio completo</summary>
+            <dl>
+              {% for i in p.itens or [] %}<div><dt>{{ i.rotulo }}</dt><dd>{{ i.texto }}</dd></div>{% endfor %}
+            </dl>
+            {% if p.incluso %}<p class="pacote-incluso"><strong>Incluso:</strong> {{ p.incluso }}</p>{% endif %}
+          </details>
+          <a class="botao botao-linha" href="#orcamento" data-pacote="{{ p.nome }}">Quero o {{ p.nome }}</a>
+        </article>
+      {% endfor %}
     </div>
-
-    {% if site.diferenciais %}
-    <div class="limite diferenciais">
-      {{ titulo_secao("Por que escolher a " ~ (marca.nome or "Brasamiga")) }}
-      <ul class="lista-diferenciais">
-        {% for d in site.diferenciais %}
-          <li><h3 class="rotulo-oswald">{{ d.titulo }}</h3><p>{{ d.texto }}</p></li>
-        {% endfor %}
-      </ul>
-    </div>
-    {% endif %}
-  </section>
-
-  {% if pacotes %}
-  <section id="pacotes" class="secao papel pacotes"{% if logo %} style="--logo: url('{{ logo }}')"{% endif %}>
-    <div class="limite">
-      {{ titulo_secao("Nossos pacotes") }}
-      {% if info.introducao %}<p class="introducao">{{ info.introducao }}</p>{% endif %}
-
-      {% if site.comparativo %}
-      <div class="comparativo-rolagem">
-        <table class="comparativo">
-          <caption class="sr-only">Comparativo dos pacotes</caption>
-          <thead>
-            <tr>
-              <td></td>
-              {% for p in pacotes %}
-                <th scope="col">
-                  <span class="comp-nome">{{ p.nome }}</span>
-                  <span class="comp-preco{{ ' comp-preco-cobre' if p.prefixo_preco }}">{% if p.prefixo_preco %}{{ p.prefixo_preco }} {% endif %}{{ p.preco }}</span>
-                  <span class="comp-unidade">{{ p.unidade }}</span>
-                </th>
-              {% endfor %}
-            </tr>
-          </thead>
-          <tbody>
-            {% for linha in site.comparativo %}
-              <tr>
-                <th scope="row">{{ linha.item }}</th>
-                {% for valor in linha.valores %}
-                  <td>
-                    {% if valor == "sim" %}<span class="incluso" role="img" aria-label="Incluso"></span>
-                    {% elif valor == "—" %}<span class="nao-incluso" aria-label="Não incluso">—</span>
-                    {% else %}{{ valor }}{% endif %}
-                  </td>
-                {% endfor %}
-              </tr>
-            {% endfor %}
-          </tbody>
-          <tfoot>
-            <tr>
-              <td></td>
-              {% for p in pacotes %}<td>{% if p.destaque %}<span class="selo">Mais pedido</span>{% endif %}</td>{% endfor %}
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-      {% endif %}
-      {% if info.legenda %}<p class="legenda">{{ info.legenda }}</p>{% endif %}
-
-      <div class="lista-pacotes">
-        {% for p in pacotes %}
-          <article class="pacote{{ ' pacote-destaque' if p.destaque }}" id="pacote-{{ p.id }}">
-            <header class="pacote-cabeca">
-              <div>
-                <p class="pacote-opcao">Opção {{ p.opcao }}</p>
-                <h3 class="pacote-nome">{{ p.nome }}</h3>
-                <p class="pacote-resumo">{{ p.resumo }}</p>
-              </div>
-              <div class="caixa-escura pacote-preco">
-                <span class="pacote-preco-rotulo">{{ p.rotulo_preco }}</span>
-                <strong>{% if p.prefixo_preco %}{{ p.prefixo_preco }} {% endif %}{{ p.preco }}</strong>
-                {% if p.detalhe_preco %}<span class="pacote-preco-detalhe">{{ p.detalhe_preco }}</span>{% endif %}
-              </div>
-            </header>
-            {% if p.destaque %}<span class="selo">Mais pedido</span>{% endif %}
-            <details class="pacote-detalhes"{% if p.destaque %} open{% endif %}>
-              <summary>Ver o que está incluso</summary>
-              <dl class="pacote-itens">
-                {% for i in p.itens or [] %}
-                  <div><dt>{{ i.rotulo }}</dt><dd>{{ i.texto }}</dd></div>
-                {% endfor %}
-              </dl>
-              {% if p.incluso %}
-                <div class="caixa-incluso">
-                  <p class="rotulo-oswald">Incluso no pacote</p>
-                  <p>{{ p.incluso }}</p>
-                </div>
-              {% endif %}
-            </details>
-            <a class="botao botao-brasa" href="#orcamento" data-pacote="{{ p.nome }}">Pedir orçamento do {{ p.nome }}</a>
-          </article>
-        {% endfor %}
-      </div>
-
-      {% if info.observacoes %}
-        <ul class="lista-quadrada observacoes">
-          {% for o in info.observacoes %}<li>{{ o }}</li>{% endfor %}
-        </ul>
-      {% endif %}
-      {% if info.bebidas %}
-        <blockquote class="caixa-escura citacao"><p>{{ info.bebidas }}</p></blockquote>
-      {% endif %}
-      {% if pdfs %}
-        <p class="pdfs">
-          {% for pdf in pdfs %}<a class="botao botao-escuro" href="{{ pdf.url }}" target="_blank" rel="noopener">Baixar a proposta completa (PDF)</a>{% endfor %}
-        </p>
-      {% endif %}
-    </div>
+    {% for p in notas %}
+      <p class="pacote-nota">{{ p.nota_texto or p.resumo }} <a href="#orcamento" data-pacote="{{ p.nome }}">{{ p.nome }}, {{ p.prefixo_preco }} {{ p.preco }}</a>.</p>
+    {% endfor %}
+    {% if info.legenda %}<p class="legenda">{{ info.legenda }}</p>{% endif %}
   </section>
   {% endif %}
 
-  {% if tem_eventos %}
-  <section id="eventos" class="secao madeira">
-    <div class="limite">
-      {{ titulo_secao("Eventos realizados", claro=true) }}
-      <p class="introducao introducao-clara">Fotos e vídeos de festas servidas pela nossa equipe.</p>
-
-      {% for e in realizados %}
-        <article class="evento">
-          <h3 class="evento-titulo">{{ e.titulo }}</h3>
-          <p class="evento-meta">
-            {% if e.data %}<time datetime="{{ e.data }}">{{ e.data | data_br }}</time>{% endif %}{% if e.data and e.local %}, {% endif %}{{ e.local }}
-          </p>
-          {% if e.descricao %}<p class="evento-descricao">{{ e.descricao }}</p>{% endif %}
-          {% if e.midias %}
-            <div class="galeria">{% for m in e.midias %}{{ midia(m, e.titulo) }}{% endfor %}</div>
-          {% endif %}
-        </article>
-      {% endfor %}
-
-      {% if galeria %}
-        <div class="galeria">{% for m in galeria %}{{ midia(m, "Evento servido pela " ~ (marca.nome or "Brasamiga")) }}{% endfor %}</div>
+  {% if fotos or realizados %}
+  <section id="eventos" class="secao secao-fotos">
+    <h2 class="titulo">Eventos realizados</h2>
+    {% if fotos %}
+      <div class="mosaico">
+        {% for m in fotos[:3] %}{{ midia(m, legenda_foto, "mosaico-" ~ loop.index) }}{% endfor %}
+      </div>
+      {% if fotos | length > 3 %}
+        <div class="galeria" id="mais-fotos" hidden>
+          {% for m in fotos[3:] %}{{ midia(m, legenda_foto) }}{% endfor %}
+        </div>
+        <button class="botao botao-linha ver-mais" type="button" aria-controls="mais-fotos" aria-expanded="false">Ver todas as fotos ({{ fotos | length }})</button>
       {% endif %}
-    </div>
+    {% endif %}
+    {% for e in realizados %}
+      <article class="evento">
+        <h3>{{ e.titulo }}</h3>
+        <p class="evento-meta">{% if e.data %}<time datetime="{{ e.data }}">{{ e.data | data_br }}</time>{% endif %}{% if e.data and e.local %} · {% endif %}{{ e.local }}</p>
+        {% if e.descricao %}<p>{{ e.descricao }}</p>{% endif %}
+        {% if e.midias %}<div class="galeria">{% for m in e.midias %}{{ midia(m, e.titulo) }}{% endfor %}</div>{% endif %}
+      </article>
+    {% endfor %}
   </section>
   {% endif %}
 
   {% if futuros %}
-  <section id="agenda" class="secao papel">
-    <div class="limite">
-      {{ titulo_secao("Próximos eventos") }}
-      <ul class="agenda">
-        {% for e in futuros %}
-          <li class="agenda-item">
-            <div class="caixa-escura agenda-data">
-              {% if e.data %}
-                <time datetime="{{ e.data }}"><span class="agenda-dia">{{ e.data | dia }}</span><span class="agenda-mes">{{ e.data | mes }}</span></time>
-              {% else %}
-                <span class="agenda-mes">Data a confirmar</span>
-              {% endif %}
-            </div>
-            <div>
-              <h3 class="evento-titulo evento-titulo-escuro">{{ e.titulo }}</h3>
-              {% if e.local %}<p class="agenda-local">{{ e.local }}</p>{% endif %}
-              {% if e.descricao %}<p>{{ e.descricao }}</p>{% endif %}
-              {% if e.midias %}<div class="galeria galeria-compacta">{% for m in e.midias %}{{ midia(m, e.titulo) }}{% endfor %}</div>{% endif %}
-            </div>
-          </li>
-        {% endfor %}
-      </ul>
-    </div>
+  <section id="agenda" class="secao">
+    <h2 class="titulo">Próximos eventos</h2>
+    <ul class="agenda">
+      {% for e in futuros %}
+        <li>
+          <span class="agenda-data">{% if e.data %}<time datetime="{{ e.data }}">{{ e.data | dia }} {{ e.data | mes }}</time>{% else %}A confirmar{% endif %}</span>
+          <span><strong>{{ e.titulo }}</strong>{% if e.local %} · {{ e.local }}{% endif %}</span>
+        </li>
+      {% endfor %}
+    </ul>
   </section>
   {% endif %}
 
-  <section id="faq" class="secao papel">
-    <div class="limite condicoes">
+  <section id="duvidas" class="secao">
+    <h2 class="titulo">Dúvidas</h2>
+    <div class="duvidas">
       {% for c in site.condicoes or [] %}
-        <div class="condicao">
-          {{ titulo_secao(c.titulo) }}
-          <ul class="lista-quadrada">
-            {% for i in c.itens or [] %}<li><strong>{{ i.rotulo }}:</strong> {{ i.texto }}</li>{% endfor %}
-          </ul>
-        </div>
+        <details>
+          <summary>{{ c.titulo }}</summary>
+          <ul>{% for i in c.itens or [] %}<li><strong>{{ i.rotulo }}:</strong> {{ i.texto }}</li>{% endfor %}</ul>
+        </details>
+      {% endfor %}
+      {% for f in site.faq or [] %}
+        <details>
+          <summary>{{ f.pergunta }}</summary>
+          <p>{{ f.resposta }}</p>
+        </details>
       {% endfor %}
     </div>
-    {% if site.faq %}
-    <div class="limite">
-      {{ titulo_secao("Perguntas frequentes") }}
-      <div class="faq">
-        {% for f in site.faq %}
-          <details class="faq-item">
-            <summary>{{ f.pergunta }}</summary>
-            <p>{{ f.resposta }}</p>
-          </details>
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
+    {% for pdf in pdfs %}
+      <p class="pdf"><a href="{{ pdf.url }}" target="_blank" rel="noopener">Baixar a proposta completa (PDF)</a></p>
+    {% endfor %}
   </section>
 
-  <section id="orcamento" class="secao madeira orcamento">
-    <div class="limite orcamento-grade">
-      <div class="orcamento-texto">
-        <h2 class="titulo-grande titulo-claro">{{ (site.orcamento or {}).titulo or "Vamos planejar o seu evento?" }}</h2>
-        <p class="orcamento-sub">{{ (site.orcamento or {}).texto }}</p>
-        <p class="orcamento-contato">
-          {% if whatsapp_url %}<a href="{{ whatsapp_url }}" target="_blank" rel="noopener">WhatsApp {{ contato.whatsapp_exibicao }}</a>{% endif %}
-          {% if contato.instagram %}<a class="cobre" href="https://instagram.com/{{ contato.instagram }}" target="_blank" rel="noopener">Instagram @{{ contato.instagram }}</a>{% endif %}
-        </p>
-      </div>
-
-      <form class="formulario" method="post" action="/orcamento#orcamento" novalidate>
-        {% if enviado %}
-          <p class="aviso aviso-ok" role="status">Recebemos seu pedido de orçamento. Vamos responder pelo WhatsApp informado.</p>
-        {% elif erro %}
-          <p class="aviso aviso-erro" role="alert">{{ erro }}</p>
-        {% endif %}
-        <div class="campo">
-          <label for="nome">Seu nome</label>
-          <input id="nome" name="nome" autocomplete="name" required maxlength="200" value="{{ form.nome }}">
-        </div>
-        <div class="campo">
-          <label for="telefone">WhatsApp</label>
-          <input id="telefone" name="telefone" type="tel" autocomplete="tel" required maxlength="40" value="{{ form.telefone }}" placeholder="(11) 90000-0000">
-        </div>
-        <div class="campo-duplo">
-          <div class="campo">
-            <label for="data_evento">Data do evento</label>
-            <input id="data_evento" name="data_evento" type="date" value="{{ form.data_evento }}">
-          </div>
-          <div class="campo">
-            <label for="convidados">Convidados</label>
-            <input id="convidados" name="convidados" type="number" min="1" inputmode="numeric" value="{{ form.convidados }}">
-          </div>
-        </div>
-        <div class="campo">
-          <label for="local">Local ou bairro</label>
-          <input id="local" name="local" maxlength="200" value="{{ form.local }}" placeholder="Ex.: Moema, São Paulo">
-        </div>
-        <div class="campo">
-          <label for="pacote">Pacote</label>
+  <section id="orcamento" class="orcamento">
+    <div class="orcamento-texto">
+      <h2 class="titulo titulo-claro">{{ (site.orcamento or {}).titulo or "Vamos planejar o seu evento?" }}</h2>
+      <p>{{ (site.orcamento or {}).texto }}</p>
+    </div>
+    <form class="formulario" method="post" action="/orcamento#orcamento" novalidate>
+      {% if enviado %}
+        <p class="aviso aviso-ok" role="status">Recebemos seu pedido de orçamento. Vamos responder pelo WhatsApp informado.</p>
+      {% elif erro %}
+        <p class="aviso aviso-erro" role="alert">{{ erro }}</p>
+      {% endif %}
+      <div class="campos">
+        <label class="campo">Seu nome
+          <input name="nome" autocomplete="name" required maxlength="200" value="{{ form.nome }}">
+        </label>
+        <label class="campo">WhatsApp
+          <input name="telefone" type="tel" autocomplete="tel" required maxlength="40" value="{{ form.telefone }}" placeholder="(11) 90000-0000">
+        </label>
+        <label class="campo">Data do evento
+          <input name="data_evento" type="date" value="{{ form.data_evento }}">
+        </label>
+        <label class="campo">Convidados
+          <input name="convidados" type="number" min="1" inputmode="numeric" value="{{ form.convidados }}">
+        </label>
+        <label class="campo">Local ou bairro
+          <input name="local" maxlength="200" value="{{ form.local }}" placeholder="Ex.: Moema, São Paulo">
+        </label>
+        <label class="campo">Pacote
           <select id="pacote" name="pacote">
             <option value="">Ainda não sei</option>
-            {% for p in pacotes %}<option value="{{ p.nome }}"{% if form.pacote == p.nome %} selected{% endif %}>{{ p.nome }} · {% if p.prefixo_preco %}{{ p.prefixo_preco }} {% endif %}{{ p.preco }}</option>{% endfor %}
+            {% for p in todos %}<option value="{{ p.nome }}"{% if form.pacote == p.nome %} selected{% endif %}>{{ p.nome }} · {% if p.prefixo_preco %}{{ p.prefixo_preco }} {% endif %}{{ p.preco }}</option>{% endfor %}
           </select>
-        </div>
-        <div class="campo">
-          <label for="email">E-mail <span class="opcional">(opcional)</span></label>
-          <input id="email" name="email" type="email" autocomplete="email" maxlength="200" value="{{ form.email }}">
-        </div>
-        <div class="campo">
-          <label for="mensagem">Algo mais que a gente deva saber? <span class="opcional">(opcional)</span></label>
-          <textarea id="mensagem" name="mensagem" rows="3" maxlength="2000">{{ form.mensagem }}</textarea>
-        </div>
-        <div class="isca" aria-hidden="true">
-          <label for="website">Não preencha</label>
-          <input id="website" name="website" tabindex="-1" autocomplete="off">
-        </div>
-        <button class="botao botao-brasa" type="submit">Pedir orçamento pelo WhatsApp</button>
-        <p class="nota">Seu pedido fica registrado com a gente e o WhatsApp abre com a mensagem pronta para enviar.</p>
-      </form>
-    </div>
+        </label>
+      </div>
+      <details class="mais"{% if form.mensagem %} open{% endif %}>
+        <summary>Quer contar mais alguma coisa?</summary>
+        <label class="campo">Mensagem <textarea name="mensagem" rows="3" maxlength="2000">{{ form.mensagem }}</textarea></label>
+      </details>
+      <div class="isca" aria-hidden="true">
+        <label>Não preencha <input name="website" tabindex="-1" autocomplete="off"></label>
+      </div>
+      <button class="botao botao-largo" type="submit">Pedir orçamento pelo WhatsApp</button>
+      <p class="nota">Seu pedido fica registrado com a gente e o WhatsApp abre com a mensagem pronta.</p>
+    </form>
   </section>
 </main>
 
 <footer class="rodape">
-  {% if contato.instagram %}<a href="https://instagram.com/{{ contato.instagram }}" target="_blank" rel="noopener">Instagram @{{ contato.instagram }}</a>{% endif %}
-  <span class="rodape-marca">{{ marca.nome or "Brasamiga" }}</span>
-  {% if whatsapp_url %}<a href="{{ whatsapp_url }}" target="_blank" rel="noopener">WhatsApp {{ contato.whatsapp_exibicao }}</a>{% endif %}
+  {% if contato.instagram %}<a href="https://instagram.com/{{ contato.instagram }}" target="_blank" rel="noopener">@{{ contato.instagram }}</a>{% endif %}
+  <span class="rodape-marca">{{ nome }}</span>
+  {% if whatsapp_url %}<a href="{{ whatsapp_url }}" target="_blank" rel="noopener">{{ contato.whatsapp_exibicao }}</a>{% endif %}
 </footer>
-
-{% if whatsapp_url %}
-  <a class="whatsapp-flutuante" href="{{ whatsapp_url }}" target="_blank" rel="noopener">WhatsApp</a>
-{% endif %}
 
 <dialog class="visor" id="visor" aria-label="Foto ampliada">
   <button class="visor-fechar" type="button" aria-label="Fechar">×</button>

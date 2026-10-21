@@ -52,6 +52,22 @@ def test_galeria_gera_webp_em_cache_e_reaproveita(settings):
     assert arquivo.stat().st_mtime_ns == modificado  # não refaz o que já está em cache
 
 
+def test_capa_usa_a_foto_configurada_ou_a_primeira(settings):
+    pasta = settings.content_dir / "eventos-realizados"
+    (pasta / "a.jpg").write_bytes(jpeg_bytes((800, 600)))
+    (pasta / "b.jpg").write_bytes(jpeg_bytes((2000, 1000), gps=True))
+    conteudo = Conteudo(settings.content_dir, settings.cache_dir)
+    escolhida = conteudo.capa("b.jpg")
+    assert escolhida.url.endswith("-grande.webp")
+    assert escolhida == conteudo.galeria()[1]
+    assert conteudo.capa(None) == conteudo.galeria()[0]
+    assert conteudo.capa("nao-existe.jpg") == conteudo.galeria()[0]
+
+
+def test_capa_sem_fotos(settings):
+    assert Conteudo(settings.content_dir, settings.cache_dir).capa("x.jpg") is None
+
+
 def test_video_sem_versao_web_nao_aparece(settings):
     (settings.content_dir / "eventos-realizados" / "IMG_5038.MOV").write_bytes(b"\x00")
     assert Conteudo(settings.content_dir, settings.cache_dir).galeria() == []

@@ -34,9 +34,11 @@ def _contexto(request: Request, form: dict | None = None, erro: str | None = Non
             for m in agrupadas.get(evento["id"], [])
         ]
     numero = site.get("contato", {}).get("whatsapp", "")
+    marca = site.get("marca", {})
     return {
         "site": site,
-        "logo": estado.conteudo.logo_escuro(site.get("marca", {}).get("logo_escuro")),
+        "logo": estado.conteudo.logo_escuro(marca.get("logo_escuro")),
+        "capa": estado.conteudo.capa(marca.get("foto_capa")),
         "galeria": estado.conteudo.galeria(),
         "pdfs": estado.conteudo.pdfs(),
         "realizados": realizados,
