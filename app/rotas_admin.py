@@ -14,6 +14,7 @@ from app import midia
 from app.web import templates
 
 TIPOS = {"realizado", "futuro"}
+SENHA_DE_EXEMPLO = "troque-esta-senha"  # a do .env.example
 security = HTTPBasic(realm="Painel Brasamiga")
 
 
@@ -21,6 +22,12 @@ def exigir_admin(request: Request, credenciais: HTTPBasicCredentials = Depends(s
     settings = request.app.state.settings
     if not settings.admin_password:
         raise HTTPException(503, "Painel desligado: defina ADMIN_PASSWORD no arquivo .env e reinicie o servidor.")
+    if settings.admin_password == SENHA_DE_EXEMPLO:
+        raise HTTPException(
+            503,
+            "Painel desligado: a senha ainda é a de exemplo. Troque ADMIN_PASSWORD no arquivo .env "
+            "(não no .env.example) e reinicie o servidor.",
+        )
     usuario_ok = compare_digest(credenciais.username.encode(), settings.admin_user.encode())
     senha_ok = compare_digest(credenciais.password.encode(), settings.admin_password.encode())
     if not (usuario_ok and senha_ok):

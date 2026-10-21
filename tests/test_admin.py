@@ -29,6 +29,15 @@ def test_admin_desligado_sem_senha(settings):
     assert TestClient(create_app(sem_senha)).get("/admin", auth=("admin", "")).status_code == 503
 
 
+def test_senha_de_exemplo_nao_libera_o_painel(settings):
+    from app.main import create_app
+
+    exemplo = Settings(**{**settings.__dict__, "admin_password": "troque-esta-senha"})
+    resp = TestClient(create_app(exemplo)).get("/admin", auth=("admin", "troque-esta-senha"))
+    assert resp.status_code == 503
+    assert ".env" in resp.json()["detail"]
+
+
 def test_post_vindo_de_outro_site_e_bloqueado(client):
     resp = client.post("/admin/eventos", data={"titulo": "x", "tipo": "realizado"}, auth=AUTH,
                        headers={"origin": "https://golpe.example"})
