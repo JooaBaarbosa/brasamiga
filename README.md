@@ -38,9 +38,28 @@ ficam no formato original.
 | Pacotes, preços, textos, FAQ, WhatsApp | `conteudo/site.toml` |
 | Logo | `conteudo/logo/` (`logo_escuro` no `site.toml` diz qual arquivo usar) |
 | PDF da proposta (botão "Baixar") | `conteudo/cardapio/` |
-| Fotos e vídeos soltos da galeria | `conteudo/eventos-realizados/` |
-| Eventos com nome, data, local e fotos | Painel `/admin` |
+| Foto de capa | `conteudo/eventos-realizados/` (`foto_capa` no `site.toml`) |
+| Fotos e vídeos para a galeria | `conteudo/eventos-realizados/` → painel `/admin` → "Fotos sem evento" |
+| Eventos (agenda e galeria) | Painel `/admin` |
 | Pedidos de orçamento | Painel `/admin` |
+| Montagem/folga da agenda, tipos de evento e faixas de convidados | `[agenda]` e `[galeria]` no `site.toml` |
+
+## Agenda e galeria
+
+- **Agenda:** cadastre os próximos eventos no painel com **início e fim**. Cada evento bloqueia a equipe de
+  `início − montagem` até `fim + folga` (`montagem_horas` e `folga_horas` em `[agenda]`, padrão 1h cada).
+  Dois eventos no mesmo dia são aceitos se esses blocos não se sobrepõem; se conflitarem, o painel diz com qual
+  evento e nada é salvo. Fim antes do início = o evento termina no dia seguinte.
+- **No site**, o calendário mostra só os horários ocupados. **Nome, local e descrição de um evento nunca
+  aparecem no site** — nem na agenda, nem na galeria.
+- **Galeria:** cada evento realizado com fotos vira um card com carrossel. O cliente vê só o **título para o
+  site**, o tipo, o número de convidados, o mês/ano e o pacote servido, e pode buscar e filtrar por tipo e faixa
+  de convidados.
+- **Fotos da pasta:** as fotos de `conteudo/eventos-realizados/` aparecem no painel em **"Fotos sem evento"**.
+  Marque as fotos e escolha "Adicionar ao evento" (ou "Ignorar"). Só fotos que pertencem a um evento aparecem
+  no site. Se um evento for excluído, as fotos dele voltam para "Fotos sem evento".
+- **Textos alternativos:** cada foto do evento tem o campo "Descrição da foto"; sem ele, o site usa
+  "Foto 2 de 5 do evento: título para o site".
 
 ## Testes
 
