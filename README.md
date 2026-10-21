@@ -4,6 +4,10 @@ Site do Brasamiga, churrasco para eventos em São Paulo, com a identidade visual
 pacotes com preços, quem somos, galeria de eventos, agenda, condições, FAQ e pedido de orçamento que
 fica salvo no painel e abre o WhatsApp com a mensagem pronta.
 
+> As fotos e vídeos dos eventos (`conteudo/eventos-realizados/`) e a proposta comercial em PDF
+> (`conteudo/cardapio/`) não fazem parte do repositório: as fotos originais trazem a localização (GPS)
+> do celular. Coloque seus próprios arquivos nessas pastas; o site gera versões web sem GPS sozinho.
+
 ## Rodando com Docker (recomendado)
 
 ```bash

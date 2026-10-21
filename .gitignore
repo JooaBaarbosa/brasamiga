@@ -5,3 +5,9 @@ __pycache__/
 data/
 .claude/
 .superpowers/
+
+# Fotos/vídeos originais (têm GPS) e a proposta comercial ficam só no computador, fora do repositório público.
+conteudo/eventos-realizados/*
+!conteudo/eventos-realizados/.gitkeep
+conteudo/cardapio/*
+!conteudo/cardapio/.gitkeep
