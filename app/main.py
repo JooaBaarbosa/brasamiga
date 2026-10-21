@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from app.config import Settings
 from app.conteudo import PASTAS_PUBLICAS, Conteudo, ConteudoInvalido
 from app.db import Database
+from app.rotas_admin import router as admin_router
 from app.rotas_site import router as site_router
 from app.storage import LocalStorage, criar_armazenamento
 from app.web import APP_DIR, templates
@@ -54,10 +55,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return templates.TemplateResponse(request, "erro_conteudo.html", {"erro": erro}, status_code=500)
 
     app.include_router(site_router)
-    try:
-        from app.rotas_admin import router as admin_router
-    except ModuleNotFoundError:  # remover este try quando a Task 8 criar rotas_admin
-        admin_router = None
-    if admin_router:
-        app.include_router(admin_router)
+    app.include_router(admin_router)
     return app

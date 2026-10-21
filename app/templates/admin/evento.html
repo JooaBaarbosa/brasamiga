@@ -1,0 +1,65 @@
+{% extends "admin/base.html" %}
+{% block titulo %}{{ evento.titulo }}{% endblock %}
+
+{% block conteudo %}
+<p><a href="/admin">Voltar ao painel</a></p>
+
+{% if erros %}
+  <div class="aviso erro" role="alert">
+    <p>Estes arquivos não foram enviados:</p>
+    <ul>{% for e in erros %}<li>{{ e }}</li>{% endfor %}</ul>
+  </div>
+{% endif %}
+{% if avisos %}
+  <div class="aviso atencao" role="status">
+    <ul>{% for a in avisos %}<li>{{ a }}</li>{% endfor %}</ul>
+  </div>
+{% endif %}
+{% if salvo and not erros %}
+  <p class="aviso ok" role="status">Evento salvo.</p>
+{% endif %}
+
+<section class="bloco">
+  <h1>{{ evento.titulo }}</h1>
+  <form method="post" action="/admin/eventos/{{ evento.id }}" class="form">
+    {% include "admin/_campos_evento.html" %}
+    <button type="submit">Salvar alterações</button>
+  </form>
+</section>
+
+<section class="bloco">
+  <h2>Fotos e vídeos ({{ midias | length }})</h2>
+  <form method="post" action="/admin/eventos/{{ evento.id }}/midias" enctype="multipart/form-data" class="form form-linha">
+    <input type="file" name="arquivos" multiple required accept="image/*,.heic,.heif,video/mp4,video/quicktime,video/webm">
+    <button type="submit">Enviar arquivos</button>
+  </form>
+
+  {% if midias %}
+    <ul class="midias">
+      {% for m in midias %}
+        <li>
+          {% if m.tipo == "video" %}
+            <video src="{{ m.url_original }}" controls preload="metadata"></video>
+          {% else %}
+            <a href="{{ m.url_original }}" target="_blank" rel="noopener"><img src="{{ m.url }}" alt="" loading="lazy"></a>
+          {% endif %}
+          <form method="post" action="/admin/midias/{{ m.id }}/excluir">
+            <button type="submit" class="perigo">Excluir {{ "vídeo" if m.tipo == "video" else "foto" }}</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="vazio">Este evento ainda não tem fotos nem vídeos. Envie pelo campo acima.</p>
+  {% endif %}
+</section>
+
+<section class="bloco">
+  <h2>Excluir evento</h2>
+  <p class="dica">Apaga o evento e todos os arquivos dele. Não dá para desfazer.</p>
+  <form method="post" action="/admin/eventos/{{ evento.id }}/excluir">
+    <label class="confirmar"><input type="checkbox" required> Quero excluir este evento</label>
+    <button type="submit" class="perigo">Excluir evento</button>
+  </form>
+</section>
+{% endblock %}
