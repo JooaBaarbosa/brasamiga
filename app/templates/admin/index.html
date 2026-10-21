@@ -19,6 +19,49 @@
 {% endmacro %}
 
 {% block conteudo %}
+{% if caixa or erros_caixa %}
+<section class="bloco" id="caixa">
+  <h2>Fotos sem evento ({{ caixa | length }})</h2>
+  <p class="dica">Fotos da pasta <code>conteudo/eventos-realizados</code>. Elas só aparecem no site depois de entrar num evento.</p>
+  {% if erros_caixa %}
+    <div class="aviso erro" role="alert"><ul>{% for e in erros_caixa %}<li>{{ e }}</li>{% endfor %}</ul></div>
+  {% endif %}
+  {% if caixa %}
+  <form method="post" action="/admin/caixa/adicionar" class="form">
+    <p class="form-linha">
+      <button type="button" class="secundario" data-marcar="todas">Selecionar todas</button>
+      <button type="button" class="secundario" data-marcar="nenhuma">Selecionar nenhuma</button>
+    </p>
+    <ul class="caixa-grade">
+      {% for item in caixa %}
+        <li>
+          <label>
+            <input type="checkbox" name="arquivos" value="{{ item.nome }}">
+            {% if item.miniatura_url %}
+              <img src="{{ item.miniatura_url }}" alt="Foto sem evento: {{ item.nome }}" loading="lazy">
+            {% else %}
+              <span class="caixa-video" role="img" aria-label="Vídeo sem evento: {{ item.nome }}">▶ vídeo</span>
+            {% endif %}
+            <span class="dica">{{ item.nome }}</span>
+          </label>
+        </li>
+      {% endfor %}
+    </ul>
+    <div class="form-linha">
+      <label>Adicionar ao evento
+        <select name="evento_id">
+          {% for e in realizados %}<option value="{{ e.id }}">{{ e.titulo }}{% if e.data %} · {{ e.data | data_br }}{% endif %}</option>{% endfor %}
+        </select>
+      </label>
+      <button type="submit">Adicionar ao evento</button>
+      <button type="submit" class="secundario" formaction="/admin/caixa/ignorar">Ignorar selecionadas</button>
+      <a href="#form-evento">+ Novo evento realizado</a>
+    </div>
+  </form>
+  {% endif %}
+</section>
+{% endif %}
+
 <section class="bloco" id="form-evento">
   <h1>Cadastrar evento</h1>
   <p class="dica">Eventos realizados aparecem na galeria do site (só com o título para o site). Eventos futuros aparecem na agenda apenas como horário ocupado.</p>

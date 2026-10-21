@@ -23,6 +23,14 @@
         if (botao) { botao.disabled = true; botao.textContent = "Enviando e convertendo…"; }
       });
     });
+    // Caixa de entrada: marcar todas / nenhuma.
+    document.querySelectorAll("[data-marcar]").forEach((botao) => {
+      botao.addEventListener("click", () => {
+        botao.closest("form").querySelectorAll("input[name=arquivos]").forEach((caixa) => {
+          caixa.checked = botao.dataset.marcar === "todas";
+        });
+      });
+    });
   </script>
 </body>
 </html>

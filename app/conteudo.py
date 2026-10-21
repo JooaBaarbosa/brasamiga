@@ -76,6 +76,13 @@ class Conteudo:
                 return None
         return ItemGaleria("imagem", f"/cache/galeria/{grande.name}", f"/cache/galeria/{mini.name}")
 
+    def arquivos(self, pasta: str) -> list[Path]:
+        return self._arquivos(pasta)
+
+    def versao_web(self, arquivo: Path) -> ItemGaleria | None:
+        """Versões WEBP (sem GPS) de uma foto da pasta, geradas no cache."""
+        return self._imagem(arquivo)
+
     def _video_web(self, arquivo: Path) -> Path:
         return self.cache_dir / "galeria" / f"{self._chave(arquivo)}.mp4"
 

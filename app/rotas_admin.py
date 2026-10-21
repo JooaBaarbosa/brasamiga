@@ -1,3 +1,4 @@
+import shutil
 import tempfile
 from datetime import date, time, timedelta
 from pathlib import Path
@@ -10,7 +11,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
-from app import agenda, midia, relogio
+from app import agenda, caixa, midia, relogio
 from app.web import templates
 
 TIPOS = {"realizado", "futuro"}
@@ -180,19 +181,29 @@ async def _salvar_midias(request: Request, evento_id: int, arquivos: list[Upload
             except midia.MidiaInvalida as erro:
                 erros.append(str(erro))
                 continue
-            base = uuid4().hex
-            chave = f"{base}{pronto.extensao}"
-            with pronto.principal.open("rb") as arquivo:
-                estado.storage.salvar(chave, arquivo, pronto.content_type)
-            chave_mini = None
-            if pronto.miniatura:
-                chave_mini = f"{base}-mini.webp"
-                with pronto.miniatura.open("rb") as arquivo:
-                    estado.storage.salvar(chave_mini, arquivo, "image/webp")
-            estado.db.adicionar_midia(evento_id, chave, pronto.tipo, chave_mini)
+            _guardar(estado, evento_id, pronto)
             if pronto.aviso:
                 avisos.append(pronto.aviso)
     return erros, avisos
+
+
+def _guardar(estado, evento_id: int, pronto: midia.Processado) -> None:
+    base = uuid4().hex
+    chave = f"{base}{pronto.extensao}"
+    with pronto.principal.open("rb") as arquivo:
+        estado.storage.salvar(chave, arquivo, pronto.content_type)
+    chave_mini = None
+    if pronto.miniatura:
+        chave_mini = f"{base}-mini.webp"
+        with pronto.miniatura.open("rb") as arquivo:
+            estado.storage.salvar(chave_mini, arquivo, "image/webp")
+    estado.db.adicionar_midia(evento_id, chave, pronto.tipo, chave_mini)
+
+
+def _caixa_pendente(request: Request) -> list[dict]:
+    estado = request.app.state
+    foto_capa = estado.conteudo.site().get("marca", {}).get("foto_capa")
+    return caixa.pendentes(estado.conteudo, estado.db.assinaturas_tratadas(), foto_capa)
 
 
 def _apagar_arquivos(request: Request, linha: dict) -> None:
@@ -222,7 +233,7 @@ def _pagina_evento(request: Request, evento_id: int, erros=None, avisos=None, sa
     )
 
 
-def _pagina_painel(request: Request, erros_form=None, form=None):
+def _pagina_painel(request: Request, erros_form=None, form=None, erros_caixa=None):
     db = request.app.state.db
     contexto = {
         "futuros": db.listar_eventos("futuro"),
@@ -231,8 +242,11 @@ def _pagina_painel(request: Request, erros_form=None, form=None):
         "erros_form": erros_form or [],
         "form": form or {"tipo": "realizado"},
         "opcoes": _opcoes(request.app.state.conteudo.site()),
+        "caixa": _caixa_pendente(request),
+        "erros_caixa": erros_caixa or [],
     }
-    return templates.TemplateResponse(request, "admin/index.html", contexto, status_code=400 if erros_form else 200)
+    status = 400 if (erros_form or erros_caixa) else 200
+    return templates.TemplateResponse(request, "admin/index.html", contexto, status_code=status)
 
 
 async def _form_enviado(request: Request) -> dict[str, str]:
@@ -326,6 +340,45 @@ def excluir_midia(request: Request, midia_id: int):
         raise HTTPException(404, "Arquivo não encontrado.")
     _apagar_arquivos(request, linha)
     return RedirectResponse(f"/admin/eventos/{linha['evento_id']}", status_code=303)
+
+
+@router.post("/caixa/adicionar")
+async def caixa_adicionar(request: Request, arquivos: list[str] = Form(default=[]), evento_id: str = Form("")):
+    estado = request.app.state
+    evento = estado.db.obter_evento(int(evento_id)) if evento_id.isdecimal() else None
+    if not evento or evento["tipo"] != "realizado":
+        return _pagina_painel(request, erros_caixa=["Escolha um evento já realizado para receber as fotos."])
+    try:
+        selecionados = caixa.resolver(_caixa_pendente(request), arquivos)
+    except ValueError as erro:
+        return _pagina_painel(request, erros_caixa=[str(erro)])
+    erros = []
+    estado.settings.tmp_dir.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=estado.settings.tmp_dir) as pasta:
+        for item in selecionados:
+            copia = Path(pasta) / f"{uuid4().hex}{item['caminho'].suffix.lower()}"
+            shutil.copyfile(item["caminho"], copia)
+            try:
+                pronto = await run_in_threadpool(midia.processar, copia, item["nome"])
+            except midia.MidiaInvalida as erro:
+                erros.append(str(erro))
+                continue
+            _guardar(estado, evento["id"], pronto)
+            estado.db.registrar_caixa(item["nome"], item["assinatura"], "importado", evento["id"])
+    if erros:
+        return _pagina_painel(request, erros_caixa=erros)
+    return RedirectResponse("/admin#caixa", status_code=303)
+
+
+@router.post("/caixa/ignorar")
+def caixa_ignorar(request: Request, arquivos: list[str] = Form(default=[])):
+    try:
+        selecionados = caixa.resolver(_caixa_pendente(request), arquivos)
+    except ValueError as erro:
+        return _pagina_painel(request, erros_caixa=[str(erro)])
+    for item in selecionados:
+        request.app.state.db.registrar_caixa(item["nome"], item["assinatura"], "ignorado")
+    return RedirectResponse("/admin#caixa", status_code=303)
 
 
 @router.post("/orcamentos/{orcamento_id}/lido")

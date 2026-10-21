@@ -31,6 +31,11 @@ h2 { font-size: 1.2rem; }
 .linha { display: grid; grid-template-columns: 12rem 1fr; gap: 0.9rem; }
 .linha-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 select { width: 100%; padding: 0.55rem 0.7rem; border: 1px solid #B9AE9F; border-radius: 0.4rem; font: inherit; background: #fff; }
+.caixa-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: 0.75rem; margin: 0; padding: 0; list-style: none; }
+.caixa-grade label { display: grid; gap: 0.3rem; cursor: pointer; }
+.caixa-grade img, .caixa-video { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 0.4rem; background: #1C1512; }
+.caixa-video { display: grid; place-items: center; color: #fff; }
+.caixa-grade input:checked ~ img, .caixa-grade input:checked ~ .caixa-video { outline: 3px solid var(--brasa); }
 .form-alt { display: grid; gap: 0.35rem; }
 .form-alt label { display: grid; gap: 0.2rem; font-size: 0.85rem; font-weight: 600; }
 input:not([type=radio], [type=checkbox], [type=file]), textarea { width: 100%; padding: 0.55rem 0.7rem; border: 1px solid #B9AE9F; border-radius: 0.4rem; font: inherit; }
