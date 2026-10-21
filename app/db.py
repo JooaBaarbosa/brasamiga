@@ -15,6 +15,7 @@ from sqlalchemy import (
     String,
     Table,
     Text,
+    Time,
     create_engine,
     delete,
     event,
@@ -41,8 +42,17 @@ eventos = Table(
     Column("descricao", Text, nullable=False, default=""),
     Column("tipo", String(10), nullable=False),
     Column("criado_em", DateTime, nullable=False, default=relogio.agora),
+    # Agenda e galeria (anuláveis: entram sozinhas num banco existente, ver _conferir_schema)
+    Column("hora_inicio", Time),
+    Column("hora_fim", Time),
+    Column("titulo_publico", String(120)),
+    Column("categoria", String(30)),
+    Column("convidados", Integer),
+    Column("pacote", String(50)),
     CheckConstraint("tipo IN ('realizado', 'futuro')", name="ck_eventos_tipo"),
 )
+
+CAMPOS_EXTRAS = {"hora_inicio", "hora_fim", "titulo_publico", "categoria", "convidados", "pacote"}
 
 midias = Table(
     "midias",
@@ -53,7 +63,21 @@ midias = Table(
     Column("chave_miniatura", String(200)),
     Column("tipo", String(10), nullable=False),
     Column("criado_em", DateTime, nullable=False, default=relogio.agora),
+    Column("alt", String(200)),
     CheckConstraint("tipo IN ('imagem', 'video')", name="ck_midias_tipo"),
+)
+
+# Fotos da pasta conteudo/eventos-realizados já tratadas no admin (a pasta em si nunca é alterada).
+caixa_entrada = Table(
+    "caixa_entrada",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("arquivo", String(300), nullable=False),
+    Column("assinatura", String(400), nullable=False, unique=True),
+    Column("situacao", String(10), nullable=False),
+    Column("evento_id", Integer, ForeignKey("eventos.id", ondelete="CASCADE")),
+    Column("criado_em", DateTime, nullable=False, default=relogio.agora),
+    CheckConstraint("situacao IN ('importado', 'ignorado')", name="ck_caixa_situacao"),
 )
 
 orcamentos = Table(
@@ -84,14 +108,25 @@ class Database:
         self._conferir_schema()
 
     def _conferir_schema(self) -> None:
-        """create_all não altera tabelas existentes: um banco da v1 quebraria o site em silêncio."""
+        """create_all não altera tabelas existentes.
+
+        Colunas anuláveis que faltarem são acrescentadas (migração automática);
+        faltar uma obrigatória significa banco de versão antiga (v1), que não dá para migrar.
+        """
         inspetor = inspect(self.engine)
-        faltando = [
-            f"{tabela.name}.{coluna.name}"
-            for tabela in metadata.sorted_tables
-            for coluna in tabela.columns
-            if coluna.name not in {c["name"] for c in inspetor.get_columns(tabela.name)}
-        ]
+        faltando, acrescentar = [], []
+        for tabela in metadata.sorted_tables:
+            existentes = {c["name"] for c in inspetor.get_columns(tabela.name)}
+            for coluna in tabela.columns:
+                if coluna.name in existentes:
+                    continue
+                (acrescentar if coluna.nullable else faltando).append((tabela.name, coluna))
+        if acrescentar and not faltando:
+            with self.engine.begin() as conn:
+                for nome_tabela, coluna in acrescentar:
+                    tipo = coluna.type.compile(dialect=self.engine.dialect)
+                    conn.exec_driver_sql(f"ALTER TABLE {nome_tabela} ADD COLUMN {coluna.name} {tipo}")
+        faltando = [f"{t}.{c.name}" for t, c in faltando]
         if faltando:
             onde = self.engine.url.render_as_string(hide_password=True)
             raise RuntimeError(
@@ -124,22 +159,48 @@ class Database:
         linhas = self._linhas(select(eventos).where(eventos.c.id == evento_id))
         return linhas[0] if linhas else None
 
-    def criar_evento(self, titulo: str, data: date | None, local: str, descricao: str, tipo: str) -> int:
-        valores = dict(titulo=titulo, data=data, local=local, descricao=descricao, tipo=tipo)
+    @staticmethod
+    def _extras(extras: dict) -> dict:
+        desconhecidos = set(extras) - CAMPOS_EXTRAS
+        if desconhecidos:
+            raise TypeError(f"Campos de evento desconhecidos: {', '.join(sorted(desconhecidos))}")
+        return extras
+
+    def criar_evento(
+        self, titulo: str, data: date | None, local: str, descricao: str, tipo: str, **extras
+    ) -> int:
+        valores = dict(titulo=titulo, data=data, local=local, descricao=descricao, tipo=tipo, **self._extras(extras))
         return self._executar(insert(eventos).values(**valores)).inserted_primary_key[0]
 
     def atualizar_evento(
-        self, evento_id: int, titulo: str, data: date | None, local: str, descricao: str, tipo: str
+        self, evento_id: int, titulo: str, data: date | None, local: str, descricao: str, tipo: str, **extras
     ) -> None:
-        valores = dict(titulo=titulo, data=data, local=local, descricao=descricao, tipo=tipo)
+        valores = dict(titulo=titulo, data=data, local=local, descricao=descricao, tipo=tipo, **self._extras(extras))
         self._executar(update(eventos).where(eventos.c.id == evento_id).values(**valores))
 
     def excluir_evento(self, evento_id: int) -> list[dict]:
         apagadas = self.listar_midias(evento_id)
         with self.engine.begin() as conn:
             conn.execute(delete(midias).where(midias.c.evento_id == evento_id))
+            # As fotos que vieram da pasta voltam para a caixa de entrada.
+            conn.execute(delete(caixa_entrada).where(caixa_entrada.c.evento_id == evento_id))
             conn.execute(delete(eventos).where(eventos.c.id == evento_id))
         return apagadas
+
+    def eventos_entre(self, inicio: date, fim: date, tipo: str | None = None) -> list[dict]:
+        stmt = select(eventos).where(eventos.c.data >= inicio, eventos.c.data <= fim)
+        if tipo:
+            stmt = stmt.where(eventos.c.tipo == tipo)
+        return self._linhas(stmt.order_by(eventos.c.data, eventos.c.hora_inicio.nulls_first(), eventos.c.id))
+
+    def horarios_entre(self, inicio: date, fim: date) -> list[dict]:
+        """Só data e horas dos próximos eventos: é tudo o que a agenda pública pode ver."""
+        stmt = (
+            select(eventos.c.data, eventos.c.hora_inicio, eventos.c.hora_fim)
+            .where(eventos.c.tipo == "futuro", eventos.c.data >= inicio, eventos.c.data <= fim)
+            .order_by(eventos.c.data, eventos.c.hora_inicio.nulls_first())
+        )
+        return self._linhas(stmt)
 
     # Mídias
 
@@ -164,6 +225,23 @@ class Database:
             return None
         self._executar(delete(midias).where(midias.c.id == midia_id))
         return linhas[0]
+
+    def atualizar_alt(self, midia_id: int, alt: str) -> None:
+        self._executar(update(midias).where(midias.c.id == midia_id).values(alt=alt or None))
+
+    # Caixa de entrada
+
+    def registrar_caixa(self, arquivo: str, assinatura: str, situacao: str, evento_id: int | None = None) -> None:
+        valores = dict(arquivo=arquivo, situacao=situacao, evento_id=evento_id)
+        with self.engine.begin() as conn:
+            alterados = conn.execute(
+                update(caixa_entrada).where(caixa_entrada.c.assinatura == assinatura).values(**valores)
+            ).rowcount
+            if not alterados:
+                conn.execute(insert(caixa_entrada).values(assinatura=assinatura, **valores))
+
+    def assinaturas_tratadas(self) -> set[str]:
+        return {linha["assinatura"] for linha in self._linhas(select(caixa_entrada.c.assinatura))}
 
     # Orçamentos
 
