@@ -136,7 +136,7 @@ def test_cria_evento_com_foto_otimizada_e_aparece_no_site(client, settings):
     assert len(nomes) == 2 and all(n.endswith(".webp") for n in nomes)
     assert any(n.endswith("-mini.webp") for n in nomes)
     html = client.get("/").text
-    assert "Casamento da Ana" in html
+    assert "Casamento no interior" in html and "Casamento da Ana" not in html  # só o título público
     assert all(f"/uploads/{n}" in html for n in nomes)
 
 

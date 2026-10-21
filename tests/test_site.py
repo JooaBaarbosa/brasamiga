@@ -28,25 +28,22 @@ def test_layout_minimalista_com_capa_e_quatro_cards(client, settings):
     assert 'class="comparativo"' not in html
 
 
-def test_foto_da_capa_nao_se_repete_na_galeria(client, settings):
+def test_fotos_da_pasta_so_aparecem_como_capa(client, settings):
     pasta = settings.content_dir / "eventos-realizados"
     (pasta / "40DB4488-618F-46D8-B957-EDCF4BEAF35E.jpg").write_bytes(jpeg_bytes((800, 600)))
     (pasta / "outra.jpg").write_bytes(jpeg_bytes((600, 800)))
     html = client.get("/").text
-    capa_mini = html.split('class="capa-foto" src="')[1].split('"')[0].replace("-grande.webp", "-mini.webp")
-    assert capa_mini not in html
-    assert html.count('class="foto ') == 1
+    assert html.count("/cache/galeria/") == 1 and 'class="capa-foto"' in html
+    assert 'class="foto"' not in html
 
 
 def test_healthz(client):
     assert client.get("/healthz").json() == {"ok": True}
 
 
-def test_galeria_da_pasta_so_publica_versao_web(client, settings):
-    (settings.content_dir / "eventos-realizados" / "IMG_0001.JPEG").write_bytes(jpeg_bytes())  # vira a capa
-    (settings.content_dir / "eventos-realizados" / "IMG_0385.JPEG").write_bytes(jpeg_bytes(gps=True))
+def test_capa_da_pasta_so_publica_versao_web(client, settings):
+    (settings.content_dir / "eventos-realizados" / "IMG_0385.JPEG").write_bytes(jpeg_bytes(gps=True))  # vira a capa
     html = client.get("/").text
-    assert "/cache/galeria/" in html and "-mini.webp" in html
     arquivo = html.split('src="/cache/galeria/')[1].split('"')[0]
     assert client.get(f"/cache/galeria/{arquivo}").headers["content-type"] == "image/webp"
     assert client.get("/conteudo/eventos-realizados/IMG_0385.JPEG").status_code == 404

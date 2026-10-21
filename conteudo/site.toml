@@ -15,6 +15,15 @@ whatsapp = "5511993433998"          # só números: 55 + DDD + número
 whatsapp_exibicao = "(11) 99343-3998"
 instagram = "brasamiga"             # sem o @
 
+[galeria]
+titulo = "Eventos realizados"
+categorias = ["Aniversário", "Casamento", "Corporativo", "Outros"]   # tipos de evento (filtro e cadastro)
+faixas = [                                                            # faixas de convidados do filtro
+  { rotulo = "15–39", min = 15, max = 39 },
+  { rotulo = "40–59", min = 40, max = 59 },
+  { rotulo = "60+", min = 60 },
+]
+
 [agenda]
 titulo = "Agenda"
 texto = "Veja os horários já reservados antes de pedir o seu."

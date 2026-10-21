@@ -1,3 +1,4 @@
+import unicodedata
 from datetime import date, datetime
 from pathlib import Path
 
@@ -37,4 +38,19 @@ def mes(valor: date | str | None) -> str:
     return f"{MESES[d.month - 1]} {d.year}" if d else ""
 
 
-templates.env.filters.update(data_br=data_br, dia=dia, mes=mes)
+MESES_LONGOS = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto",
+                "Setembro", "Outubro", "Novembro", "Dezembro"]
+
+
+def mes_ano(valor: date | str | None) -> str:
+    d = _data(valor)
+    return f"{MESES_LONGOS[d.month - 1]} {d.year}" if d else ""
+
+
+def normalizar(texto: str | None) -> str:
+    """Minúsculas, sem acento e com espaços simples: o formato que a busca da galeria compara."""
+    sem_acento = "".join(c for c in unicodedata.normalize("NFKD", texto or "") if not unicodedata.combining(c))
+    return " ".join(sem_acento.lower().split())
+
+
+templates.env.filters.update(data_br=data_br, dia=dia, mes=mes, mes_ano=mes_ano, normalizar=normalizar)

@@ -4,6 +4,7 @@ from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from app import agenda, relogio, whatsapp
+from app.rotas_admin import categorias
 from app.web import templates
 
 router = APIRouter()
@@ -18,31 +19,53 @@ def _data_ou_none(texto: str) -> date | None:
         return None
 
 
+FAIXAS_PADRAO = [{"rotulo": "15–39", "min": 15, "max": 39}, {"rotulo": "40–59", "min": 40, "max": 59},
+                 {"rotulo": "60+", "min": 60}]
+CAMPOS_PUBLICOS = ("id", "titulo_publico", "categoria", "convidados", "pacote", "data")
+
+
+def _galeria_cfg(site: dict) -> dict:
+    cfg = site.get("galeria") if isinstance(site.get("galeria"), dict) else {}
+    faixas = [f for f in cfg.get("faixas") or [] if isinstance(f, dict) and f.get("rotulo") and "min" in f]
+    return {
+        "titulo": cfg.get("titulo") or "Eventos realizados",
+        "categorias": categorias(site),
+        "faixas": faixas or FAIXAS_PADRAO,
+    }
+
+
+def _eventos_galeria(estado) -> list[dict]:
+    """Eventos realizados com fotos, só com os campos que o cliente pode ver."""
+    realizados = estado.db.listar_eventos("realizado")
+    agrupadas = estado.db.midias_por_evento([e["id"] for e in realizados])
+    eventos = []
+    for evento in realizados:
+        midias = agrupadas.get(evento["id"], [])
+        if not midias:
+            continue
+        publico = {campo: evento[campo] for campo in CAMPOS_PUBLICOS}
+        publico["titulo_publico"] = publico["titulo_publico"] or "Evento Brasamiga"
+        publico["midias"] = [
+            {"tipo": m["tipo"], "alt": m["alt"], "url": estado.storage.url(m["chave"]),
+             "url_miniatura": estado.storage.url(m["chave_miniatura"] or m["chave"])}
+            for m in midias
+        ]
+        eventos.append(publico)
+    return eventos
+
+
 def _contexto(request: Request, form: dict | None = None, erro: str | None = None, enviado: bool = False) -> dict:
     estado = request.app.state
     site = estado.conteudo.site()
-    realizados = estado.db.listar_eventos("realizado")
-    futuros = estado.db.listar_eventos("futuro", a_partir_de=relogio.hoje())
-    agrupadas = estado.db.midias_por_evento([e["id"] for e in realizados + futuros])
-    for evento in realizados + futuros:
-        evento["midias"] = [
-            {
-                **m,
-                "url": estado.storage.url(m["chave"]),
-                "url_miniatura": estado.storage.url(m["chave_miniatura"] or m["chave"]),
-            }
-            for m in agrupadas.get(evento["id"], [])
-        ]
     numero = site.get("contato", {}).get("whatsapp", "")
     marca = site.get("marca", {})
     return {
         "site": site,
         "logo": estado.conteudo.logo_escuro(marca.get("logo_escuro")),
         "capa": estado.conteudo.capa(marca.get("foto_capa")),
-        "galeria": estado.conteudo.galeria(),
         "pdfs": estado.conteudo.pdfs(),
-        "realizados": realizados,
-        "futuros": futuros,
+        "eventos_galeria": _eventos_galeria(estado),
+        "galeria_cfg": _galeria_cfg(site),
         "whatsapp_url": whatsapp.link(numero, whatsapp.MENSAGEM_PADRAO) if numero else None,
         "form": form or {},
         "erro": erro,

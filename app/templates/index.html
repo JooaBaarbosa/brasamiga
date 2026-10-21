@@ -1,14 +1,18 @@
 {% extends "base.html" %}
 
-{% macro midia(item, legenda, classe="") %}
-  <button class="foto {{ classe }}" type="button" data-src="{{ item.url }}" data-tipo="{{ item.tipo }}" aria-label="Ampliar: {{ legenda }}">
-    {% if item.tipo == "video" %}
-      <video src="{{ item.url }}#t=0.5" muted playsinline preload="metadata"></video>
-      <span class="foto-play" aria-hidden="true"></span>
-    {% else %}
-      <img src="{{ item.url_miniatura }}" alt="{{ legenda }}" loading="lazy">
-    {% endif %}
-  </button>
+{% macro slide(item, i, total, titulo) %}
+  {% set descricao = item.alt or (("Vídeo " if item.tipo == "video" else "Foto ") ~ i ~ " de " ~ total ~ " do evento: " ~ titulo) %}
+  <li class="slide">
+    <button class="foto" type="button" data-src="{{ item.url }}" data-tipo="{{ item.tipo }}" data-legenda="{{ descricao }}"
+            aria-label="Ampliar: {{ descricao }}">
+      {% if item.tipo == "video" %}
+        <video src="{{ item.url }}#t=0.5" muted playsinline preload="metadata" aria-label="{{ descricao }}"></video>
+        <span class="foto-play" aria-hidden="true"></span>
+      {% else %}
+        <img src="{{ item.url_miniatura }}" alt="{{ descricao }}"{% if i > 1 %} loading="lazy"{% endif %}>
+      {% endif %}
+    </button>
+  </li>
 {% endmacro %}
 
 {% block conteudo %}
@@ -17,8 +21,6 @@
 {% set todos = site.pacotes or [] %}
 {% set cards = todos %}
 {% set nome = marca.nome or "Brasamiga" %}
-{% set legenda_foto = "Churrasco servido pela " ~ nome %}
-{% set fotos = galeria | rejectattr("url", "equalto", capa.url if capa else "") | list %}
 
 <header class="topo">
   <a class="topo-marca" href="/">
@@ -28,7 +30,7 @@
 </header>
 
 <section class="capa" aria-labelledby="capa-titulo">
-  {% if capa %}<img class="capa-foto" src="{{ capa.url }}" alt="" fetchpriority="high">{% endif %}
+  {% if capa %}<img class="capa-foto" src="{{ capa.url }}" alt="" role="presentation" fetchpriority="high">{% endif %}
   <div class="capa-conteudo">
     <h1 id="capa-titulo" class="capa-logo">
       {% if logo %}<img src="{{ logo }}" alt="{{ nome }}" width="360">{% else %}{{ nome }}{% endif %}
@@ -80,28 +82,52 @@
     <noscript><p class="agenda-texto">Ative o JavaScript para ver a agenda ou chame a gente no WhatsApp.</p></noscript>
   </section>
 
-  {% if fotos or realizados %}
-  <section id="eventos" class="secao secao-fotos">
-    <h2 class="titulo">Eventos realizados</h2>
-    {% if fotos %}
-      <div class="mosaico">
-        {% for m in fotos[:3] %}{{ midia(m, legenda_foto, "mosaico-" ~ loop.index) }}{% endfor %}
-      </div>
-      {% if fotos | length > 3 %}
-        <div class="galeria" id="mais-fotos" hidden>
-          {% for m in fotos[3:] %}{{ midia(m, legenda_foto) }}{% endfor %}
+  {% if eventos_galeria %}
+  <section id="eventos" class="secao">
+    <h2 class="titulo">{{ galeria_cfg.titulo }}</h2>
+    <div class="filtros" hidden>
+      <input class="busca" type="search" aria-label="Buscar eventos" placeholder="Buscar eventos (ex.: casamento no interior)">
+      <div class="chips">
+        <div class="chips-grupo" data-filtro="tipo" role="group" aria-label="Tipo de evento">
+          <button type="button" class="chip on" data-valor="" aria-pressed="true">Todos</button>
+          {% for c in galeria_cfg.categorias %}<button type="button" class="chip" data-valor="{{ c | normalizar }}" aria-pressed="false">{{ c }}</button>{% endfor %}
         </div>
-        <button class="botao botao-linha ver-mais" type="button" aria-controls="mais-fotos" aria-expanded="false">Ver todas as fotos ({{ fotos | length }})</button>
-      {% endif %}
-    {% endif %}
-    {% for e in realizados %}
-      <article class="evento">
-        <h3>{{ e.titulo }}</h3>
-        <p class="evento-meta">{% if e.data %}<time datetime="{{ e.data }}">{{ e.data | data_br }}</time>{% endif %}{% if e.data and e.local %} · {% endif %}{{ e.local }}</p>
-        {% if e.descricao %}<p>{{ e.descricao }}</p>{% endif %}
-        {% if e.midias %}<div class="galeria">{% for m in e.midias %}{{ midia(m, e.titulo) }}{% endfor %}</div>{% endif %}
-      </article>
-    {% endfor %}
+        <div class="chips-grupo" data-filtro="pessoas" role="group" aria-label="Quantidade de convidados">
+          <button type="button" class="chip on" data-valor="" aria-pressed="true">Qualquer tamanho</button>
+          {% for f in galeria_cfg.faixas %}<button type="button" class="chip" data-valor="{{ f.min }}" data-min="{{ f.min }}" data-max="{{ f.max or '' }}" aria-pressed="false">{{ f.rotulo }}</button>{% endfor %}
+        </div>
+      </div>
+      <p class="contador" aria-live="polite">{{ eventos_galeria | length }} eventos</p>
+    </div>
+    <div class="eventos-grade">
+      {% for e in eventos_galeria %}
+        {% set total = e.midias | length %}
+        <article class="evento-card" data-categoria="{{ e.categoria | normalizar }}" data-convidados="{{ e.convidados or '' }}"
+                 data-busca="{{ (e.titulo_publico ~ ' ' ~ (e.categoria or '') ~ ' ' ~ (e.pacote or '')) | normalizar }}">
+          <div class="carrossel" tabindex="0" aria-roledescription="carrossel" aria-label="Fotos do evento: {{ e.titulo_publico }}">
+            <ul class="trilha">
+              {% for m in e.midias %}{{ slide(m, loop.index, total, e.titulo_publico) }}{% endfor %}
+            </ul>
+            {% if total > 1 %}
+              <button type="button" class="seta seta-esq" aria-label="Foto anterior">‹</button>
+              <button type="button" class="seta seta-dir" aria-label="Próxima foto">›</button>
+              <span class="contagem" aria-hidden="true">1/{{ total }}</span>
+              {% if total <= 8 %}
+                <span class="pontos" aria-hidden="true">{% for m in e.midias %}<i{% if loop.first %} class="on"{% endif %}></i>{% endfor %}</span>
+              {% endif %}
+            {% endif %}
+          </div>
+          <div class="evento-corpo">
+            {% if e.categoria or e.convidados %}
+              <p class="evento-tag">{{ e.categoria or "" }}{% if e.categoria and e.convidados %} · {% endif %}{% if e.convidados %}{{ e.convidados }} convidados{% endif %}</p>
+            {% endif %}
+            <h3 class="evento-titulo">{{ e.titulo_publico }}</h3>
+            <p class="evento-meta">{{ e.data | mes_ano }}{% if e.data and e.pacote %} · {% endif %}{% if e.pacote %}Pacote {{ e.pacote }}{% endif %}</p>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+    <p class="sem-resultado" hidden>Nenhum evento com esses filtros. <button type="button" class="botao botao-linha limpar">Limpar filtros</button></p>
   </section>
   {% endif %}
 
@@ -182,6 +208,8 @@
 
 <dialog class="visor" id="visor" aria-label="Foto ampliada">
   <button class="visor-fechar" type="button" aria-label="Fechar">×</button>
+  <button class="visor-nav visor-anterior" type="button" aria-label="Foto anterior">‹</button>
+  <button class="visor-nav visor-proxima" type="button" aria-label="Próxima foto">›</button>
   <div class="visor-conteudo"></div>
 </dialog>
 {% endblock %}
@@ -189,4 +217,6 @@
 {% block scripts %}
 <script src="/static/js/site.js" defer></script>
 <script src="/static/js/agenda.js" defer></script>
+<script src="/static/js/carrossel.js" defer></script>
+<script src="/static/js/galeria.js" defer></script>
 {% endblock %}
