@@ -10,13 +10,57 @@ fica salvo no painel e abre o WhatsApp com a mensagem pronta.
 
 ## Rodando com Docker (recomendado)
 
+### 0. Preparar a máquina (uma vez só)
+
+- Docker Desktop instalado e **aberto**. Confira com `docker info`: ele precisa mostrar a versão do
+  servidor. Se aparecer `failed to connect to the docker API`, o Docker Desktop está fechado.
+
+### 1. Clonar ou atualizar
+
 ```bash
-cp .env.example .env          # troque ADMIN_PASSWORD
-docker compose up --build
+git clone https://github.com/JooaBaarbosa/brasamiga.git && cd brasamiga
 ```
+
+Se já tem o clone, rode `git status -sb`. Se aparecer `[behind N]`, atualize com `git pull --ff-only`.
+
+### 2. Liberar a porta 8000
+
+O site usa a porta 8000. Rode `docker ps`: se outro projeto estiver nessa porta, pare-o com
+`docker compose down` na pasta dele. Sem isso, a subida falha com `port is already allocated`.
+
+### 3. Configurar o `.env`
+
+```bash
+cp .env.example .env
+```
+
+Troque `ADMIN_PASSWORD` (é a senha do painel).
+
+### 4. Build e subida
+
+```bash
+docker compose up -d --build --wait
+```
+
+- O comando só termina quando o site está saudável. Confira com `docker compose ps`: `healthy`.
+- Erro `Unable to connect to deb.debian.org` (ou outro download) é falha de rede: rode o mesmo comando de novo.
+- Se o container parar, veja o motivo com `docker compose logs web --tail 20`.
+
+### 5. Conferir
 
 - Site: http://localhost:8000
 - Painel: http://localhost:8000/admin (usuário e senha do `.env`)
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8000/healthz   # 200
+```
+
+### 6. Desligar
+
+```bash
+docker compose down        # os dados ficam no volume
+docker compose down -v     # apaga também o banco e as fotos enviadas pelo painel
+```
 
 Banco, fotos enviadas pelo painel e versões otimizadas ficam no volume `brasamiga-data`.
 A pasta `conteudo/` é lida direto do seu computador: troque fotos ou edite o `site.toml` e recarregue a página.
